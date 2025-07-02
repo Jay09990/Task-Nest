@@ -1,0 +1,104 @@
+# Ignore node_modules in both frontend and backend
+.Frontend/node_modules/
+.Backend/node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependency directories
+**/node_modules/
+
+# Build output
+.Frontend/build/
+.Backend/dist/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Env files
+.Frontend/.env
+.Backend/.env
+
+# Editor configs
+.vscode/
+.idea/
+*.swp
+
+# Optional: ignore coverage and test output
+coverage/
+.Frontend/coverage/
+.Backend/coverage/
+
+# Optional: ignore local database or uploads
+.Backend/uploads/
+.Backend/data/
+
+# === FRONTEND: Vite + React (in .Frontend/) ===
+
+# Dependency directory
+.Frontend/node_modules/
+
+# Production build
+.Frontend/dist/
+
+# Environment variables
+.Frontend/.env
+.Frontend/.env.local
+.Frontend/.env.*.local
+
+# Vite cache
+.Frontend/.vite/
+
+# Coverage reports
+.Frontend/coverage/
+
+# Log files
+.Frontend/npm-debug.log*
+.Frontend/yarn-debug.log*
+.Frontend/yarn-error.log*
+
+# Editor and system files
+.Frontend/.DS_Store
+.Frontend/.idea/
+.Frontend/.vscode/
+.Frontend/*.swp
+
+# === BACKEND: Node.js + Express (in .Backend/) ===
+
+# Dependency directory
+.Backend/node_modules/
+
+# Output (if using build step)
+.Backend/dist/
+
+# Environment variables
+.Backend/.env
+
+# Logs
+.Backend/logs/
+.Backend/*.log
+.Backend/npm-debug.log*
+.Backend/yarn-debug.log*
+.Backend/yarn-error.log*
+
+# Coverage
+.Backend/coverage/
+
+# Uploads or temp data (optional)
+.Backend/uploads/
+.Backend/data/
+
+# === GLOBAL / GENERAL ===
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Editor folders
+.vscode/
+.idea/
+*.swp
