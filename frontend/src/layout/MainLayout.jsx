@@ -2,12 +2,18 @@ import { Outlet } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 
-function MainLayout() {
+function MainLayout({ onAddTask, onCreateProject, tasks, projects }) {
   return (
     <div className="flex h-screen">
-      <Sidebar />
+      <Sidebar
+        onAddTask={onAddTask}
+        onCreateProject={onCreateProject}
+        tasks={tasks}
+        projects={projects}
+      />
+
       <div className="flex-1 flex flex-col">
-        <Navbar />
+        <Navbar onAddTask={onAddTask} />
         <main className="p-4 overflow-y-auto">
           <Outlet />
         </main>
