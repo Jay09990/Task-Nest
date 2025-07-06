@@ -2,11 +2,18 @@ import { createContext, useContext, useState, useEffect } from "react";
 
 export const AuthContext = createContext();
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Load from localStorage on app start
   useEffect(() => {
@@ -17,6 +24,7 @@ export const AuthProvider = ({ children }) => {
       setUser(JSON.parse(storedUser));
       setToken(storedToken);
     }
+    setIsLoading(false);
   }, []);
 
   // Login function
@@ -33,6 +41,15 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     localStorage.removeItem("user");
     localStorage.removeItem("token");
+  };
+
+  const value = {
+    user,
+    token,
+    login,
+    logout,
+    isAuthenticated: !!user,
+    isLoading,
   };
 
   return (

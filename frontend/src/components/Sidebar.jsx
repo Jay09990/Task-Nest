@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
+// import {TaskCard, ProjectCard} from "../pages/TaskAndProject.jsx"
 import {
   Home,
   CheckSquare,
@@ -20,38 +22,66 @@ const Sidebar = ({ onAddTask, onCreateProject, tasks = [], projects = [] }) => {
 
   // Calculate task counts dynamically
   const getTodayTasksCount = () => {
-    const today = new Date().toISOString().split('T')[0];
-    return tasks.filter(task => task.dueDate === today && !task.completed).length;
+    const today = new Date().toISOString().split("T")[0];
+    return tasks.filter((task) => task.dueDate === today && !task.completed)
+      .length;
   };
 
   const getUpcomingTasksCount = () => {
-    const today = new Date().toISOString().split('T')[0];
-    return tasks.filter(task => task.dueDate > today && !task.completed).length;
+    const today = new Date().toISOString().split("T")[0];
+    return tasks.filter((task) => task.dueDate > today && !task.completed)
+      .length;
   };
 
   const getImportantTasksCount = () => {
-    return tasks.filter(task => task.isImportant && !task.completed).length;
+    return tasks.filter((task) => task.isImportant && !task.completed).length;
   };
 
   const getCompletedTasksCount = () => {
-    return tasks.filter(task => task.completed).length;
+    return tasks.filter((task) => task.completed).length;
   };
 
   const getAllTasksCount = () => {
-    return tasks.filter(task => !task.completed).length;
+    return tasks.filter((task) => !task.completed).length;
   };
 
   const getProjectTasksCount = (projectId) => {
-    return tasks.filter(task => task.project === projectId && !task.completed).length;
+    return tasks.filter((task) => task.project === projectId && !task.completed)
+      .length;
   };
 
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, count: null },
-    { id: "all-tasks", label: "All Tasks", icon: CheckSquare, count: getAllTasksCount() },
-    { id: "today", label: "Today", icon: Calendar, count: getTodayTasksCount() },
-    { id: "upcoming", label: "Upcoming", icon: Clock, count: getUpcomingTasksCount() },
-    { id: "important", label: "Important", icon: Star, count: getImportantTasksCount() },
-    { id: "completed", label: "Completed", icon: Target, count: getCompletedTasksCount() },
+    {
+      id: "all-tasks",
+      label: "All Tasks",
+      icon: CheckSquare,
+      count: getAllTasksCount(),
+    },
+    {
+      id: "today",
+      label: "Today",
+      icon: Calendar,
+      count: getTodayTasksCount(),
+    },
+    {
+      id: "upcoming",
+      label: "Upcoming",
+      icon: Clock,
+      count: getUpcomingTasksCount(),
+    },
+    {
+      id: "important",
+      label: "Important",
+      icon: Star,
+      count: getImportantTasksCount(),
+    },
+    {
+      id: "completed",
+      label: "Completed",
+      icon: Target,
+      count: getCompletedTasksCount(),
+    },
     { id: "trash", label: "Trash", icon: Trash2, count: 0 },
   ];
 
@@ -92,24 +122,62 @@ const Sidebar = ({ onAddTask, onCreateProject, tasks = [], projects = [] }) => {
   ];
 
   // Convert created projects to sidebar format
-  const createdProjects = projects.map(project => {
+  const createdProjects = projects.map((project) => {
     // Convert hex color to Tailwind classes
     const getColorClasses = (hexColor) => {
       const colorMap = {
-        '#3B82F6': { dot: 'bg-blue-500', bg: 'bg-blue-100', text: 'text-blue-700' },
-        '#10B981': { dot: 'bg-green-500', bg: 'bg-green-100', text: 'text-green-700' },
-        '#8B5CF6': { dot: 'bg-purple-500', bg: 'bg-purple-100', text: 'text-purple-700' },
-        '#EF4444': { dot: 'bg-red-500', bg: 'bg-red-100', text: 'text-red-700' },
-        '#F59E0B': { dot: 'bg-orange-500', bg: 'bg-orange-100', text: 'text-orange-700' },
-        '#EC4899': { dot: 'bg-pink-500', bg: 'bg-pink-100', text: 'text-pink-700' },
-        '#6366F1': { dot: 'bg-indigo-500', bg: 'bg-indigo-100', text: 'text-indigo-700' },
-        '#14B8A6': { dot: 'bg-teal-500', bg: 'bg-teal-100', text: 'text-teal-700' },
+        "#3B82F6": {
+          dot: "bg-blue-500",
+          bg: "bg-blue-100",
+          text: "text-blue-700",
+        },
+        "#10B981": {
+          dot: "bg-green-500",
+          bg: "bg-green-100",
+          text: "text-green-700",
+        },
+        "#8B5CF6": {
+          dot: "bg-purple-500",
+          bg: "bg-purple-100",
+          text: "text-purple-700",
+        },
+        "#EF4444": {
+          dot: "bg-red-500",
+          bg: "bg-red-100",
+          text: "text-red-700",
+        },
+        "#F59E0B": {
+          dot: "bg-orange-500",
+          bg: "bg-orange-100",
+          text: "text-orange-700",
+        },
+        "#EC4899": {
+          dot: "bg-pink-500",
+          bg: "bg-pink-100",
+          text: "text-pink-700",
+        },
+        "#6366F1": {
+          dot: "bg-indigo-500",
+          bg: "bg-indigo-100",
+          text: "text-indigo-700",
+        },
+        "#14B8A6": {
+          dot: "bg-teal-500",
+          bg: "bg-teal-100",
+          text: "text-teal-700",
+        },
       };
-      return colorMap[hexColor] || { dot: 'bg-gray-500', bg: 'bg-gray-100', text: 'text-gray-700' };
+      return (
+        colorMap[hexColor] || {
+          dot: "bg-gray-500",
+          bg: "bg-gray-100",
+          text: "text-gray-700",
+        }
+      );
     };
 
     const colorClasses = getColorClasses(project.color);
-    
+
     return {
       id: project.id,
       name: project.name,
@@ -121,18 +189,24 @@ const Sidebar = ({ onAddTask, onCreateProject, tasks = [], projects = [] }) => {
   });
 
   // Use created projects if available, otherwise use default projects
-  const displayProjects = createdProjects.length > 0 ? createdProjects : defaultProjects;
+  const displayProjects =
+    createdProjects.length > 0 ? createdProjects : defaultProjects;
 
   const MenuItem = ({ item, isActive, onClick }) => {
     const Icon = item.icon;
     return (
-      <div
-        onClick={() => onClick(item.id)}
+      <Link
+        to={item.id === "dashboard" ? "/" : `/tasks/${item.id}`}
         className={`flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-200 group ${
           isActive
             ? "bg-blue-100 text-blue-700 shadow-sm"
             : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
         }`}
+        onClick={(e) => {
+          // Prevent default only if you need custom behavior
+          // e.preventDefault();
+          onClick(item.id);
+        }}
       >
         <div className="flex items-center space-x-3">
           <Icon
@@ -156,7 +230,7 @@ const Sidebar = ({ onAddTask, onCreateProject, tasks = [], projects = [] }) => {
             {item.count}
           </span>
         )}
-      </div>
+      </Link>
     );
   };
 
@@ -191,21 +265,23 @@ const Sidebar = ({ onAddTask, onCreateProject, tasks = [], projects = [] }) => {
   return (
     <div className="h-screen w-80 bg-white border-r border-gray-200 flex flex-col">
       {/* Header */}
-      <div className="p-6 border-b border-gray-200">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-            <CheckSquare className="text-white" size={20} />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-800">TaskFlow</h1>
-            <p className="text-sm text-gray-500">Manage your tasks</p>
+      <a href="/">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+              <CheckSquare className="text-white" size={20} />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-800">TaskNest</h1>
+              <p className="text-sm text-gray-500">Manage your tasks</p>
+            </div>
           </div>
         </div>
-      </div>
+      </a>
 
       {/* Quick Actions */}
       <div className="p-4 border-b border-gray-200">
-        <button 
+        <button
           onClick={onAddTask}
           className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-lg font-medium flex items-center justify-center space-x-2 hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-sm hover:shadow-md"
         >
@@ -249,7 +325,7 @@ const Sidebar = ({ onAddTask, onCreateProject, tasks = [], projects = [] }) => {
                 Projects
               </span>
             </div>
-            <button 
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 onCreateProject();
@@ -270,13 +346,16 @@ const Sidebar = ({ onAddTask, onCreateProject, tasks = [], projects = [] }) => {
                   onClick={setActiveItem}
                 />
               ))}
-              
+
               {/* Add Project Button */}
               <button
                 onClick={onCreateProject}
                 className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg bg-blue-500  text-white hover:bg-blue-50 hover:text-gray-700 transition-all duration-200 group"
               >
-                <Plus size={16} className="text-white group-hover:text-blue-600" />
+                <Plus
+                  size={16}
+                  className="text-white group-hover:text-blue-600"
+                />
                 <span className="font-medium text-sm">Add Project</span>
               </button>
             </div>

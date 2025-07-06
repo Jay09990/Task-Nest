@@ -1,16 +1,12 @@
+// App.jsx
 import { useState } from "react";
-import { Routes, Route } from "react-router-dom";
-import Dashboard from "./pages/Dashboard";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import NotFound from "./utils/NotFound";
-import MainLayout from "./layout/MainLayout";
+import { BrowserRouter } from "react-router-dom";
+import AppRoutes from "./routes";
 import AddTask from "./components/AddTask";
 import CreateProject from "./components/CreateNewProject";
 
+
 function App() {
-  console.log("App component rendered");
-  
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
   const [tasks, setTasks] = useState([]);
@@ -37,29 +33,14 @@ function App() {
   const closeCreateProject = () => setIsCreateProjectOpen(false);
 
   return (
-    <>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-
-        {/* Protected Routes */}
-        <Route
-          element={
-            <MainLayout
-              onAddTask={openAddTask}
-              onCreateProject={openCreateProject}
-              tasks={tasks}
-              projects={projects}
-            />
-          }
-        >
-          <Route path="/" element={<Dashboard />} />
-        </Route>
-
-        {/* Fallback Route */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+    <BrowserRouter>
+      {/* Your Routes Component */}
+      <AppRoutes
+        tasks={tasks}
+        projects={projects}
+        onAddTask={openAddTask}
+        onCreateProject={openCreateProject}
+      />
 
       {/* Global Modals */}
       <AddTask
@@ -73,7 +54,7 @@ function App() {
         onClose={closeCreateProject}
         onSubmit={handleCreateProject}
       />
-    </>
+    </BrowserRouter>
   );
 }
 
