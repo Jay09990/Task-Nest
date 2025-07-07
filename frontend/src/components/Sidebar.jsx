@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Home,
@@ -24,6 +24,12 @@ const Sidebar = ({
 }) => {
   const [isProjectsExpanded, setIsProjectsExpanded] = useState(true);
   const location = useLocation();
+  // const [user, setUser] = useState({ name: "", email: "" });
+
+  // localStorage.setItem(
+  //   "user",
+  //   JSON.stringify({ name: "Jay Dudhrejiya", email: "jay@example.com" })
+  // );
 
   // Get current active item from URL
   const getCurrentActiveItem = () => {
@@ -35,6 +41,11 @@ const Sidebar = ({
   };
 
   const activeItem = getCurrentActiveItem();
+
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    if (storedUser) setUser(storedUser);
+  }, []);
 
   // Calculate task counts dynamically
   const getTodayTasksCount = () => {
@@ -81,7 +92,7 @@ const Sidebar = ({
       label: "Dashboard",
       icon: Home,
       count: null,
-      path: "/",
+      path: "/dashboard",
     },
     {
       id: "all-tasks",
@@ -402,17 +413,7 @@ const Sidebar = ({
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-gray-200 space-y-2">
-        <Link
-          to="/settings"
-          className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors duration-200"
-        >
-          <div className="flex items-center space-x-3">
-            <Settings size={18} className="text-gray-500" />
-            <span className="font-medium text-sm text-gray-600">Settings</span>
-          </div>
-        </Link>
-
+      <div className="p-4 border-t border-gray-200">
         <div className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors duration-200">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
@@ -420,9 +421,11 @@ const Sidebar = ({
             </div>
             <div>
               <span className="font-medium text-sm text-gray-700">
-                John Doe
+                {user.name || "Guest User"}
               </span>
-              <p className="text-xs text-gray-500">john@example.com</p>
+              <p className="text-xs text-gray-500">
+                {user.email || "guest@example.com"}
+              </p>
             </div>
           </div>
         </div>

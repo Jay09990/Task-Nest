@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import TaskCard from "../components/Task.jsx"; // Fixed import path
 import ProjectCard from "../components/Project.jsx"; // Fixed import path
 import { Plus, Trash2, RotateCcw } from "lucide-react"; // Added icons
 
 const TasksView = ({
-  category = "all-tasks", // Added default value
   tasks = [], // Added default value
   projects = [], // Added default value
   onUpdateTask,
@@ -12,7 +12,7 @@ const TasksView = ({
   onAddTask, // Added for create functionality
 }) => {
   const [filteredTasks, setFilteredTasks] = useState([]);
-  // const [category, setCategory] = useState("all-tasks");
+  const { category } = useParams();
 
   // Filter tasks based on category
   useEffect(() => {
