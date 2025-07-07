@@ -101,6 +101,7 @@ Frontend/.env.*.local
 Frontend/.vite/
 Frontend/coverage/
 
+
 # === BACKEND SPECIFIC ===
 Backend/node_modules/
 Backend/dist/
@@ -111,6 +112,8 @@ Backend/uploads/
 Backend/data/
 Backend/logs/
 Backend/coverage/
+Backend/constants.js
+
 
 # === SYSTEM FILES ===
 .DS_Store
