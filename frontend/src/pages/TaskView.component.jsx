@@ -1,59 +1,81 @@
 import { useEffect, useState } from "react";
-import TaskCard from "../components/Task.jsx";
-import ProjectCard from "../components/Project.jsx";
+import TaskCard from "../components/Task.jsx"; // Fixed import path
+import ProjectCard from "../components/Project.jsx"; // Fixed import path
+import { Plus, Trash2, RotateCcw } from "lucide-react"; // Added icons
 
 const TasksView = ({
-  category,
-  tasks,
-  projects,
+  category = "all-tasks", // Added default value
+  tasks = [], // Added default value
+  projects = [], // Added default value
   onUpdateTask,
   onDeleteTask,
+  onAddTask, // Added for create functionality
 }) => {
   const [filteredTasks, setFilteredTasks] = useState([]);
+  // const [category, setCategory] = useState("all-tasks");
 
   // Filter tasks based on category
   useEffect(() => {
+    // Safety check for category
+    if (!category) {
+      setFilteredTasks([]);
+      return;
+    }
+
     const today = new Date().toISOString().split("T")[0];
 
     switch (category) {
       case "all-tasks":
-        setFilteredTasks(tasks.filter((task) => task.status !== "completed"));
+        setFilteredTasks(
+          tasks.filter((task) => task.status !== "completed" && !task.isDeleted)
+        );
         break;
       case "today":
         setFilteredTasks(
           tasks.filter(
-            (task) => task.dueDate === today && task.status !== "completed"
+            (task) =>
+              task.dueDate === today &&
+              task.status !== "completed" &&
+              !task.isDeleted
           )
         );
         break;
       case "upcoming":
         setFilteredTasks(
           tasks.filter(
-            (task) => task.dueDate > today && task.status !== "completed"
+            (task) =>
+              task.dueDate > today &&
+              task.status !== "completed" &&
+              !task.isDeleted
           )
         );
         break;
       case "important":
         setFilteredTasks(
           tasks.filter(
-            (task) => task.isImportant && task.status !== "completed"
+            (task) =>
+              task.isImportant && task.status !== "completed" && !task.isDeleted
           )
         );
         break;
       case "completed":
-        setFilteredTasks(tasks.filter((task) => task.status === "completed"));
+        setFilteredTasks(
+          tasks.filter((task) => task.status === "completed" && !task.isDeleted)
+        );
         break;
       case "trash":
         setFilteredTasks(tasks.filter((task) => task.isDeleted));
         break;
       default:
-        // Handle project-specific tasks
-        if (category.startsWith("project-")) {
+        // Handle project-specific tasks with safety check
+        if (category && category.startsWith("project-")) {
           const projectId = category.replace("project-", "");
           setFilteredTasks(
             tasks.filter(
               (task) =>
-                task.project === projectId && task.status !== "completed"
+                task.project === projectId &&
+                task.status !== "completed" &&
+                !task.isDeleted
             )
           );
         } else {
@@ -64,6 +86,9 @@ const TasksView = ({
 
   // Get category title
   const getCategoryTitle = () => {
+    // Safety check for category
+    if (!category) return "Tasks";
+
     switch (category) {
       case "all-tasks":
         return "All Tasks";
@@ -150,6 +175,36 @@ const TasksView = ({
     }
   };
 
+  const handleCreateTask = () => {
+    // Call the parent's create task function
+    onAddTask?.();
+  };
+
+  const handleEmptyTrash = () => {
+    // Permanently delete all trash items
+    const trashTasks = tasks.filter((task) => task.isDeleted);
+    trashTasks.forEach((task) => {
+      onDeleteTask?.(task.id);
+    });
+  };
+
+  const getEmptyStateMessage = () => {
+    switch (category) {
+      case "trash":
+        return "Your trash is empty";
+      case "completed":
+        return "No completed tasks yet";
+      case "today":
+        return "No tasks due today";
+      case "upcoming":
+        return "No upcoming tasks";
+      case "important":
+        return "No important tasks";
+      default:
+        return "No tasks in this category yet";
+    }
+  };
+
   return (
     <div className="p-6 w-full overflow-y-auto bg-gray-50 min-h-screen">
       {/* Header with category title and task count */}
@@ -164,10 +219,14 @@ const TasksView = ({
           </p>
         </div>
 
-        {/* Optional: Add new task button for specific categories */}
+        {/* Add new task button for specific categories */}
         {!["completed", "trash"].includes(category) && (
-          <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2">
-            <span>+ Add Task</span>
+          <button
+            onClick={handleCreateTask}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 shadow-sm hover:shadow-md"
+          >
+            <Plus size={18} />
+            <span>Add Task</span>
           </button>
         )}
       </div>
@@ -194,15 +253,12 @@ const TasksView = ({
             <h3 className="text-lg font-semibold text-gray-800 mb-2">
               No tasks found
             </h3>
-            <p className="text-gray-500">
-              {category === "trash"
-                ? "Your trash is empty"
-                : category === "completed"
-                ? "No completed tasks yet"
-                : "No tasks in this category yet"}
-            </p>
+            <p className="text-gray-500 mb-4">{getEmptyStateMessage()}</p>
             {!["completed", "trash"].includes(category) && (
-              <button className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+              <button
+                onClick={onAddTask}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-sm hover:shadow-md"
+              >
                 Create your first task
               </button>
             )}
@@ -218,7 +274,7 @@ const TasksView = ({
               onToggleImportant={handleToggleImportant}
               onEdit={handleEditTask}
               onDelete={handleDeleteTask}
-              onRestore={category === "trash" ? handleRestoreTask : undefined}
+              // Additional props for trash functionality
               showRestore={category === "trash"}
               showComplete={category !== "completed"}
               showImportant={category !== "trash"}
@@ -227,20 +283,44 @@ const TasksView = ({
         </div>
       )}
 
-      {/* Optional: Show category-specific actions */}
+      {/* Trash-specific actions */}
       {category === "trash" && filteredTasks.length > 0 && (
         <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-red-800">Trash</h3>
-              <p className="text-sm text-red-600">
+              <h3 className="text-sm font-medium text-red-800 flex items-center">
+                <Trash2 size={16} className="mr-2" />
+                Trash
+              </h3>
+              <p className="text-sm text-red-600 mt-1">
                 Items in trash will be permanently deleted after 30 days
               </p>
             </div>
-            <button className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm">
-              Empty Trash
-            </button>
+            <div className="flex space-x-2">
+              <button
+                onClick={handleEmptyTrash}
+                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm flex items-center space-x-2"
+              >
+                <Trash2 size={16} />
+                <span>Empty Trash</span>
+              </button>
+            </div>
           </div>
+        </div>
+      )}
+
+      {/* Optional: Show restore all button in trash */}
+      {category === "trash" && filteredTasks.length > 0 && (
+        <div className="mt-2">
+          <button
+            onClick={() => {
+              filteredTasks.forEach((task) => handleRestoreTask(task.id));
+            }}
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm flex items-center space-x-2"
+          >
+            <RotateCcw size={16} />
+            <span>Restore All</span>
+          </button>
         </div>
       )}
     </div>

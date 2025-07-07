@@ -15,8 +15,9 @@ import {
 } from "lucide-react";
 
 
-
+//
 const TaskCard = ({
+  category,
   task,
   onToggleComplete,
   onToggleImportant,

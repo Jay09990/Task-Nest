@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-// import {TaskCard, ProjectCard} from "../pages/TaskAndProject.jsx"
+import { Link, useLocation } from "react-router-dom";
 import {
   Home,
   CheckSquare,
@@ -16,73 +15,116 @@ import {
   Target,
 } from "lucide-react";
 
-const Sidebar = ({ onAddTask, onCreateProject, tasks = [], projects = [] }) => {
+const Sidebar = ({
+  onAddTask,
+  onCreateProject,
+  tasks = [],
+  projects = [],
+  onCategorySelect, // Add this prop to communicate with parent
+}) => {
   const [isProjectsExpanded, setIsProjectsExpanded] = useState(true);
-  const [activeItem, setActiveItem] = useState("dashboard");
+  const location = useLocation();
+
+  // Get current active item from URL
+  const getCurrentActiveItem = () => {
+    const path = location.pathname;
+    if (path === "/" || path === "/dashboard") return "dashboard";
+    if (path.startsWith("/tasks/")) return path.replace("/tasks/", "");
+    if (path.startsWith("/projects/")) return path.replace("/projects/", "");
+    return "dashboard";
+  };
+
+  const activeItem = getCurrentActiveItem();
 
   // Calculate task counts dynamically
   const getTodayTasksCount = () => {
     const today = new Date().toISOString().split("T")[0];
-    return tasks.filter((task) => task.dueDate === today && !task.completed)
-      .length;
+    return tasks.filter(
+      (task) => task.dueDate === today && !task.completed && !task.isDeleted
+    ).length;
   };
 
   const getUpcomingTasksCount = () => {
     const today = new Date().toISOString().split("T")[0];
-    return tasks.filter((task) => task.dueDate > today && !task.completed)
-      .length;
+    return tasks.filter(
+      (task) => task.dueDate > today && !task.completed && !task.isDeleted
+    ).length;
   };
 
   const getImportantTasksCount = () => {
-    return tasks.filter((task) => task.isImportant && !task.completed).length;
+    return tasks.filter(
+      (task) => task.isImportant && !task.completed && !task.isDeleted
+    ).length;
   };
 
   const getCompletedTasksCount = () => {
-    return tasks.filter((task) => task.completed).length;
+    return tasks.filter((task) => task.completed && !task.isDeleted).length;
   };
 
   const getAllTasksCount = () => {
-    return tasks.filter((task) => !task.completed).length;
+    return tasks.filter((task) => !task.completed && !task.isDeleted).length;
+  };
+
+  const getTrashTasksCount = () => {
+    return tasks.filter((task) => task.isDeleted).length;
   };
 
   const getProjectTasksCount = (projectId) => {
-    return tasks.filter((task) => task.project === projectId && !task.completed)
-      .length;
+    return tasks.filter(
+      (task) => task.project === projectId && !task.completed && !task.isDeleted
+    ).length;
   };
 
   const menuItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home, count: null },
+    {
+      id: "dashboard",
+      label: "Dashboard",
+      icon: Home,
+      count: null,
+      path: "/",
+    },
     {
       id: "all-tasks",
       label: "All Tasks",
       icon: CheckSquare,
       count: getAllTasksCount(),
+      path: "/tasks/all-tasks",
     },
     {
       id: "today",
       label: "Today",
       icon: Calendar,
       count: getTodayTasksCount(),
+      path: "/tasks/today",
     },
     {
       id: "upcoming",
       label: "Upcoming",
       icon: Clock,
       count: getUpcomingTasksCount(),
+      path: "/tasks/upcoming",
     },
     {
       id: "important",
       label: "Important",
       icon: Star,
       count: getImportantTasksCount(),
+      path: "/tasks/important",
     },
     {
       id: "completed",
       label: "Completed",
       icon: Target,
       count: getCompletedTasksCount(),
+      path: "/tasks/completed",
     },
-    { id: "trash", label: "Trash", icon: Trash2, count: 0 },
+    {
+      id: "trash",
+      label: "Trash",
+      icon: Trash2,
+      count: getTrashTasksCount(),
+      path: "/tasks/trash",
+    },
   ];
 
   // Default projects (fallback if no projects created)
@@ -123,7 +165,6 @@ const Sidebar = ({ onAddTask, onCreateProject, tasks = [], projects = [] }) => {
 
   // Convert created projects to sidebar format
   const createdProjects = projects.map((project) => {
-    // Convert hex color to Tailwind classes
     const getColorClasses = (hexColor) => {
       const colorMap = {
         "#3B82F6": {
@@ -177,7 +218,6 @@ const Sidebar = ({ onAddTask, onCreateProject, tasks = [], projects = [] }) => {
     };
 
     const colorClasses = getColorClasses(project.color);
-
     return {
       id: project.id,
       name: project.name,
@@ -188,25 +228,28 @@ const Sidebar = ({ onAddTask, onCreateProject, tasks = [], projects = [] }) => {
     };
   });
 
-  // Use created projects if available, otherwise use default projects
   const displayProjects =
     createdProjects.length > 0 ? createdProjects : defaultProjects;
 
-  const MenuItem = ({ item, isActive, onClick }) => {
+  // Handle navigation - communicate with parent component
+  const handleNavigation = (itemId) => {
+    // If you have a parent handler, call it
+    if (onCategorySelect) {
+      onCategorySelect(itemId);
+    }
+  };
+
+  const MenuItem = ({ item, isActive }) => {
     const Icon = item.icon;
     return (
       <Link
-        to={item.id === "dashboard" ? "/" : `/tasks/${item.id}`}
+        to={item.path}
         className={`flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-200 group ${
           isActive
             ? "bg-blue-100 text-blue-700 shadow-sm"
             : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
         }`}
-        onClick={(e) => {
-          // Prevent default only if you need custom behavior
-          // e.preventDefault();
-          onClick(item.id);
-        }}
+        onClick={() => handleNavigation(item.id)}
       >
         <div className="flex items-center space-x-3">
           <Icon
@@ -234,16 +277,19 @@ const Sidebar = ({ onAddTask, onCreateProject, tasks = [], projects = [] }) => {
     );
   };
 
-  const ProjectItem = ({ project, onClick }) => {
-    const isActive = activeItem === project.id;
+  const ProjectItem = ({ project }) => {
+    const isActive = activeItem === `project-${project.id}`;
+    const projectPath = `/tasks/project-${project.id}`;
+
     return (
-      <div
-        onClick={() => onClick(project.id)}
+      <Link
+        to={projectPath}
         className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 group ${
           isActive
             ? `${project.bgColor} ${project.textColor} shadow-sm`
             : "text-gray-600 hover:bg-gray-50 hover:text-gray-800"
         }`}
+        onClick={() => handleNavigation(`project-${project.id}`)}
       >
         <div className="flex items-center space-x-3">
           <div className={`w-3 h-3 rounded-full ${project.dotColor}`}></div>
@@ -258,15 +304,15 @@ const Sidebar = ({ onAddTask, onCreateProject, tasks = [], projects = [] }) => {
         >
           {project.count}
         </span>
-      </div>
+      </Link>
     );
   };
 
   return (
     <div className="h-screen w-80 bg-white border-r border-gray-200 flex flex-col">
       {/* Header */}
-      <a href="/">
-        <div className="p-6 border-b border-gray-200">
+      <Link to="/">
+        <div className="p-6 border-b border-gray-200 hover:bg-gray-50 transition-colors duration-200">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
               <CheckSquare className="text-white" size={20} />
@@ -277,7 +323,7 @@ const Sidebar = ({ onAddTask, onCreateProject, tasks = [], projects = [] }) => {
             </div>
           </div>
         </div>
-      </a>
+      </Link>
 
       {/* Quick Actions */}
       <div className="p-4 border-b border-gray-200">
@@ -298,7 +344,6 @@ const Sidebar = ({ onAddTask, onCreateProject, tasks = [], projects = [] }) => {
               key={item.id}
               item={item}
               isActive={activeItem === item.id}
-              onClick={setActiveItem}
             />
           ))}
         </div>
@@ -340,22 +385,15 @@ const Sidebar = ({ onAddTask, onCreateProject, tasks = [], projects = [] }) => {
           {isProjectsExpanded && (
             <div className="space-y-1 ml-2">
               {displayProjects.map((project) => (
-                <ProjectItem
-                  key={project.id}
-                  project={project}
-                  onClick={setActiveItem}
-                />
+                <ProjectItem key={project.id} project={project} />
               ))}
 
               {/* Add Project Button */}
               <button
                 onClick={onCreateProject}
-                className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg bg-blue-500  text-white hover:bg-blue-50 hover:text-gray-700 transition-all duration-200 group"
+                className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-all duration-200 group"
               >
-                <Plus
-                  size={16}
-                  className="text-white group-hover:text-blue-600"
-                />
+                <Plus size={16} className="text-white" />
                 <span className="font-medium text-sm">Add Project</span>
               </button>
             </div>
@@ -365,12 +403,15 @@ const Sidebar = ({ onAddTask, onCreateProject, tasks = [], projects = [] }) => {
 
       {/* Footer */}
       <div className="p-4 border-t border-gray-200 space-y-2">
-        <div className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors duration-200">
+        <Link
+          to="/settings"
+          className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors duration-200"
+        >
           <div className="flex items-center space-x-3">
             <Settings size={18} className="text-gray-500" />
             <span className="font-medium text-sm text-gray-600">Settings</span>
           </div>
-        </div>
+        </Link>
 
         <div className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors duration-200">
           <div className="flex items-center space-x-3">
