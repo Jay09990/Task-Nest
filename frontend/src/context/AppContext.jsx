@@ -1,3 +1,4 @@
+import { Edit } from "lucide-react";
 import React, { createContext, useContext, useReducer } from "react";
 
 // Initial state
@@ -22,6 +23,7 @@ const ActionTypes = {
   ADD_TASK: "ADD_TASK",
   UPDATE_TASK: "UPDATE_TASK",
   DELETE_TASK: "DELETE_TASK",
+  EDIT_TASK: "EDIT_TASK",
   TOGGLE_TASK_COMPLETE: "TOGGLE_TASK_COMPLETE",
   TOGGLE_TASK_IMPORTANT: "TOGGLE_TASK_IMPORTANT",
 
@@ -50,6 +52,14 @@ const appReducer = (state, action) => {
       return { ...state, tasks: [...state.tasks, action.payload] };
 
     case ActionTypes.UPDATE_TASK:
+      return {
+        ...state,
+        tasks: state.tasks.map((task) =>
+          task.id === action.payload.id ? { ...task, ...action.payload } : task
+        ),
+      };
+
+    case ActionTypes.EDIT_TASK:
       return {
         ...state,
         tasks: state.tasks.map((task) =>

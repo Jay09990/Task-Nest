@@ -20,8 +20,10 @@ import {
 import { useApp } from "../context/AppContext";
 import TaskCard from "../components/Task";
 import ProjectCard from "../components/Project";
+import AddTask from "../components/AddTask";
+import CreateProject from "../components/CreateNewProject";
 
-const Dashboard = () => {
+const Dashboard = (onAddTask, onCreateProject) => {
   const { tasks, projects, actions, loading, error } = useApp();
 
   // Local state for dashboard-specific functionality
@@ -148,7 +150,7 @@ const Dashboard = () => {
 
   const handleEditTask = (task) => {
     // TODO: Implement edit task modal
-    console.log("Edit task:", task);
+    actions.editTask(task);
   };
 
   const handleDeleteTask = (taskId) => {
