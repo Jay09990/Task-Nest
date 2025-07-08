@@ -87,6 +87,8 @@ const Login = () => {
         password: "",
       });
 
+      login(response.data.user, response.data.token);
+      
       navigate("/Dashboard");
     } catch (error) {
       console.error("Registration error:", error);

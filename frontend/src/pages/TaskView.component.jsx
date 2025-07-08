@@ -5,10 +5,9 @@ import ProjectCard from "../components/Project.jsx"; // Fixed import path
 import { Plus, Trash2, RotateCcw } from "lucide-react"; // Added icons
 import { useApp } from "../context/AppContext";
 import AddTask from "../components/AddTask"; 
+import CreateProject from "../components/CreateNewProject.jsx"; // Import for creating projects
 
 const TasksView = ({
-  // tasks = [], // Added default value
-  // projects = [], // Added default value
   onUpdateTask,
   onDeleteTask,
   onAddTask, // Added for create functionality
@@ -16,6 +15,8 @@ const TasksView = ({
   const [filteredTasks, setFilteredTasks] = useState([]);
   const [editTask, setEditTask] = useState(null); // Track the task being edited
   const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Track modal state
+  const [showCreateTask, setShowCreateTask] = useState(false);
+  const [showCreateProject, setShowCreateProject] = useState(false);
   const { category } = useParams();
   const { tasks, projects, actions, loading, error } = useApp();
 
@@ -167,11 +168,6 @@ const TasksView = ({
     }
   };
 
-  const handleCreateTask = () => {
-    // Call the parent's create task function
-    onAddTask?.();
-  };
-
   const handleEmptyTrash = () => {
     // Permanently delete all trash items
     const trashTasks = tasks.filter((task) => task.isDeleted);
@@ -214,7 +210,7 @@ const TasksView = ({
         {/* Add new task button for specific categories */}
         {!["completed", "trash"].includes(category) && (
           <button
-            onClick={handleCreateTask}
+            onClick={() => setShowCreateTask(true)}
             className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 shadow-sm hover:shadow-md"
           >
             <Plus size={18} />
@@ -248,7 +244,7 @@ const TasksView = ({
             <p className="text-gray-500 mb-4">{getEmptyStateMessage()}</p>
             {!["completed", "trash"].includes(category) && (
               <button
-                onClick={onAddTask}
+                onClick={() => setShowCreateTask(true)}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-sm hover:shadow-md"
               >
                 Create your first task
@@ -313,6 +309,29 @@ const TasksView = ({
             </div>
           </div>
         </div>
+      )}
+
+      {showCreateTask && (
+        <AddTask
+          isOpen={showCreateTask}
+          onClose={() => setShowCreateTask(false)}
+          onSubmit={(taskData) => {
+            actions.addTask(taskData);
+            setShowCreateTask(false);
+          }}
+          projects={projects}
+        />
+      )}
+
+      {showCreateProject && (
+        <CreateProject
+          isOpen={showCreateProject}
+          onClose={() => setShowCreateProject(false)}
+          onSubmit={(projectData) => {
+            actions.addProject(projectData);
+            setShowCreateProject(false);
+          }}
+        />
       )}
 
       {/* Optional: Show restore all button in trash */}

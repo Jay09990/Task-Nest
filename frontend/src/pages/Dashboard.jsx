@@ -160,7 +160,7 @@ const Dashboard = (onAddTask, onCreateProject) => {
   // Handler functions for ProjectCard interactions
   const handleEditProject = (project) => {
     // TODO: Implement edit project modal
-    console.log("Edit project:", project);
+    actions.editProject(project);
   };
 
   const handleDeleteProject = (projectId) => {
@@ -230,6 +230,30 @@ const Dashboard = (onAddTask, onCreateProject) => {
           </button>
         </div>
       </div>
+
+      {/* Create Task Modal */}
+      {showCreateTask && (
+        <AddTask
+          isOpen={showCreateTask}
+          onClose={() => setShowCreateTask(false)}
+          onSubmit={(taskData) => {
+            actions.addTask(taskData);
+            setShowCreateTask(false);
+          }}
+          projects={projects}
+        />
+      )}
+      
+      {showCreateProject && (
+        <CreateProject
+          isOpen={showCreateProject}
+          onClose={() => setShowCreateProject(false)}
+          onSubmit={(projectData) => {
+            actions.addProject(projectData);
+            setShowCreateProject(false);
+          }}
+        />
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
