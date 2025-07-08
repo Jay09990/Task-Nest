@@ -3,16 +3,21 @@ import { useParams } from "react-router-dom";
 import TaskCard from "../components/Task.jsx"; // Fixed import path
 import ProjectCard from "../components/Project.jsx"; // Fixed import path
 import { Plus, Trash2, RotateCcw } from "lucide-react"; // Added icons
+import { useApp } from "../context/AppContext";
+import AddTask from "../components/AddTask"; 
 
 const TasksView = ({
-  tasks = [], // Added default value
-  projects = [], // Added default value
+  // tasks = [], // Added default value
+  // projects = [], // Added default value
   onUpdateTask,
   onDeleteTask,
   onAddTask, // Added for create functionality
 }) => {
   const [filteredTasks, setFilteredTasks] = useState([]);
+  const [editTask, setEditTask] = useState(null); // Track the task being edited
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Track modal state
   const { category } = useParams();
+  const { tasks, projects, actions, loading, error } = useApp();
 
   // Filter tasks based on category
   useEffect(() => {
@@ -127,40 +132,27 @@ const TasksView = ({
   };
 
   const handleToggleImportant = (taskId) => {
-    const task = tasks.find((t) => t.id === taskId);
-    if (task) {
-      const updatedTask = {
-        ...task,
-        isImportant: !task.isImportant,
-      };
-      onUpdateTask?.(updatedTask);
-    }
+    // const task = tasks.find((t) => t.id === taskId);
+    // if (task) {
+    //   const updatedTask = {
+    //     ...task,
+    //     isImportant: !task.isImportant,
+    //   };
+    //   onUpdateTask?.(updatedTask);
+    // }
+    actions.toggleTaskImportant(taskId);
   };
 
   const handleEditTask = (task) => {
-    // You can implement a modal or redirect to edit form
-    console.log("Edit task:", task);
-    // Example: Open edit modal
-    // setEditModalOpen(true);
-    // setEditingTask(task);
+    // console.log(`Editing task: ${task.id}`);
+    // actions.updateTask(task);
+    setEditTask(task);
+    setIsEditModalOpen(true);
   };
 
-  const handleDeleteTask = (taskId) => {
-    // For trash category, permanently delete
-    if (category === "trash") {
-      onDeleteTask?.(taskId);
-    } else {
-      // For other categories, move to trash
-      const task = tasks.find((t) => t.id === taskId);
-      if (task) {
-        const updatedTask = {
-          ...task,
-          isDeleted: true,
-          deletedAt: new Date().toISOString(),
-        };
-        onUpdateTask?.(updatedTask);
-      }
-    }
+  const handleDeleteTask = (id) => {
+    actions.deleteTask(id);
+    console.log(`Task with ID ${id} deleted`);
   };
 
   const handleRestoreTask = (taskId) => {
@@ -281,6 +273,20 @@ const TasksView = ({
             />
           ))}
         </div>
+      )}
+
+      {/* Place the edit modal here, before the closing div */}
+      {isEditModalOpen && (
+        <AddTask
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onSubmit={(updatedTask) => {
+            actions.editTask(updatedTask);
+            setIsEditModalOpen(false);
+          }}
+          initialData={editTask}
+          projects={projects}
+        />
       )}
 
       {/* Trash-specific actions */}

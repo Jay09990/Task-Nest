@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   X,
   Calendar,
@@ -11,7 +11,8 @@ import {
   Plus,
 } from "lucide-react";
 
-const AddTask = ({ isOpen, onClose, onSubmit }) => {
+const AddTask = (props) => {
+  const { isOpen, onClose, onSubmit, initialData } = props;
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -23,6 +24,12 @@ const AddTask = ({ isOpen, onClose, onSubmit }) => {
     assignee: "",
     isImportant: false,
   });
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData);
+    }
+  }, [initialData]);
 
   const [newTag, setNewTag] = useState("");
 
@@ -111,7 +118,10 @@ const AddTask = ({ isOpen, onClose, onSubmit }) => {
             onClick={onClose}
             className="p-1 hover:bg-gray-100 rounded-full transition-colors"
           >
-            <X size={20} className="text-gray-500 hover:bg-red-100 text-2xl hover:text-red-600" />
+            <X
+              size={20}
+              className="text-gray-500 hover:bg-red-100 text-2xl hover:text-red-600"
+            />
           </button>
         </div>
 
@@ -185,7 +195,12 @@ const AddTask = ({ isOpen, onClose, onSubmit }) => {
                 htmlFor="important"
                 className="text-sm font-medium text-gray-700 flex items-center space-x-1"
               >
-                <Star size={16} className={`text-yellow-500 ${formData.isImportant ?"fill-yellow-500" : ""}`} />
+                <Star
+                  size={16}
+                  className={`text-yellow-500 ${
+                    formData.isImportant ? "fill-yellow-500" : ""
+                  }`}
+                />
                 <span>Mark as Important</span>
               </label>
             </div>

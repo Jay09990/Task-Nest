@@ -182,6 +182,9 @@ export const AppProvider = ({ children }) => {
     setTasks: (tasks) =>
       dispatch({ type: ActionTypes.SET_TASKS, payload: tasks }),
     addTask: (task) => dispatch({ type: ActionTypes.ADD_TASK, payload: task }),
+    // In AppContext.jsx, inside the actions object:
+    editTask: (task) =>
+      dispatch({ type: ActionTypes.EDIT_TASK, payload: task }),
     updateTask: (task) =>
       dispatch({ type: ActionTypes.UPDATE_TASK, payload: task }),
     deleteTask: (taskId) =>
