@@ -26,9 +26,14 @@ app.use((req, res, next) => {
 // importing routes
 
 import userRouter from "./routes/user.routes.js"
+import projectRoutes from "./routes/project.routes.js";
+
+
 
 //routes declaration
 
-app.use("/api/users", userRouter)
+app.use("/tasknest/api/users", userRouter)
+app.use("/tasknest/api/v1/projects", projectRoutes);
+
 
 export { app }

@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { Project } from "./project.model";
+import { User } from "./user.model";
 
 const taskSchema = new mongoose.Schema(
   {
@@ -45,13 +46,15 @@ const taskSchema = new mongoose.Schema(
     },
     assignee: {
       name: {
-        type: String,
+        type: mongoose.Types.ObjectId,
+        ref: "User",
         required: true,
-      },
-      avatar: {
-        type: String,
-        default: null,
-      },
+      }
+    },
+    user: {
+      type: mongoose.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
   },
   { timeseries: true }

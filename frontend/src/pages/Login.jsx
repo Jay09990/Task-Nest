@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { CheckCircle, AlertCircle, Eye, EyeOff, LogIn } from "lucide-react";
 import axios from "axios";
-import { useLocation,useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context//AuthContext.jsx";
 
 const Login = () => {
   const location = useLocation();
   const { login } = useAuth();
   const navigate = useNavigate();
+
   // Get success message from location state if available
   const successMessage = location.state?.message;
 
@@ -68,7 +69,7 @@ const Login = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:8000/api/users/login",
+        "http://localhost:8000/tasknest/api/users/login",
         {
           userName: formData.userName, // Assuming userName is used for login
           email: formData.email,
@@ -77,8 +78,8 @@ const Login = () => {
       );
 
       // Success handling
-      console.log("login successful:", response.data);
-      alert("login successful! Welcome " + formData.userName);
+      // console.log("login successful:", response.data);
+      // alert("login successful! Welcome " + formData.userName);
 
       // Clear form after success
       setFormData({
@@ -88,7 +89,7 @@ const Login = () => {
       });
 
       login(response.data.user, response.data.token);
-      
+
       navigate("/Dashboard");
     } catch (error) {
       console.error("Registration error:", error);
@@ -100,7 +101,9 @@ const Login = () => {
             setLoginError(error.response.data.message || "Invalid input data");
             break;
           case 500:
-            setLoginError("Server error. Please try again later, or you have not registered yet.");
+            setLoginError(
+              "Server error. Please try again later, or you have not registered yet."
+            );
             break;
           case 404:
             setLoginError("User not found. Please check your credentials.");

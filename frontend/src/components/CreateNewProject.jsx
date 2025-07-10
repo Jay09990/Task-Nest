@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useContext } from "react";
 import {
   X,
   Folder,
@@ -8,8 +9,25 @@ import {
   User,
   FileText,
 } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { useApp } from "../context/AppContext";
 
-const CreateProject = ({ isOpen, onClose, onSubmit }) => {
+const CreateProject = ({ isOpen, onClose }) => {
+  const { actions } = useApp();
+  const { user, token, isAuthenticated, isLoading } = useAuth();
+
+  // Debug logging
+  useEffect(() => {
+    console.log("=== CreateProject Debug Info ===");
+    console.log("user:", user);
+    console.log("token:", token);
+    console.log("isAuthenticated:", isAuthenticated);
+    console.log("isLoading:", isLoading);
+    console.log("typeof user:", typeof user);
+    console.log("typeof token:", typeof token);
+    console.log("================================");
+  }, [user, token, isAuthenticated, isLoading]);
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -26,6 +44,18 @@ const CreateProject = ({ isOpen, onClose, onSubmit }) => {
 
   const [newTeamMember, setNewTeamMember] = useState("");
   const [newGoal, setNewGoal] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Show loading state while auth is loading
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg shadow-xl p-6">
+          <div className="text-center">Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
   const colors = [
     { name: "Blue", value: "#3B82F6", bg: "bg-blue-500" },
@@ -61,23 +91,70 @@ const CreateProject = ({ isOpen, onClose, onSubmit }) => {
     { value: "high", label: "High" },
   ];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name.trim()) return;
 
-    // Prepare data for backend
+    console.log("=== Submit Debug ===");
+    console.log("user at submit:", user);
+    console.log("token at submit:", token);
+    console.log("isAuthenticated at submit:", isAuthenticated);
+
+    if (!isAuthenticated || !user || !token) {
+      console.log("Authentication check failed");
+      console.log("isAuthenticated:", isAuthenticated);
+      console.log("user:", user);
+      console.log("token:", token);
+
+      actions.setError("Please log in to create a project");
+      return;
+    }
+
+    if (!formData.name.trim()) {
+      actions.setError("Project name is required");
+      return;
+    }
+
+    setIsSubmitting(true);
+    actions.setLoading(true);
+    actions.clearError();
+
     const projectData = {
       ...formData,
-      id: Date.now(), // Temporary ID, backend will generate proper ID
-      createdAt: new Date().toISOString(),
-      status: "active",
-      tasksCount: 0,
-      completedTasks: 0,
-      progress: 0,
+      startDate: formData.startDate || null,
+      endDate: formData.endDate || null,
     };
 
-    onSubmit(projectData);
-    resetForm();
+    try {
+      console.log("Sending request with token:", token);
+      const response = await fetch(
+        "http://localhost:8000/tasknest/api/v1/projects",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(projectData),
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok) {
+        actions.addProject(result.data);
+        resetForm();
+        onClose();
+        actions.setError(null);
+      } else {
+        actions.setError(result.message || "Failed to create project");
+      }
+    } catch (error) {
+      console.error("Error creating project:", error);
+      actions.setError("Failed to create project. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+      actions.setLoading(false);
+    }
   };
 
   const resetForm = () => {
@@ -166,8 +243,14 @@ const CreateProject = ({ isOpen, onClose, onSubmit }) => {
           </button>
         </div>
 
+        {/* Auth Debug Info - Remove this in production */}
+        <div className="p-4 bg-gray-50 border-b text-sm">
+          <strong>Debug Info:</strong> User: {user ? "✓" : "✗"} | Token:{" "}
+          {token ? "✓" : "✗"} | Authenticated: {isAuthenticated ? "✓" : "✗"}
+        </div>
+
         {/* Form */}
-        <div className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Project Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -182,6 +265,7 @@ const CreateProject = ({ isOpen, onClose, onSubmit }) => {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter project name..."
               required
+              disabled={isSubmitting}
             />
           </div>
 
@@ -198,6 +282,7 @@ const CreateProject = ({ isOpen, onClose, onSubmit }) => {
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               placeholder="Describe your project..."
+              disabled={isSubmitting}
             />
           </div>
 
@@ -221,6 +306,7 @@ const CreateProject = ({ isOpen, onClose, onSubmit }) => {
                         : ""
                     }`}
                     title={color.name}
+                    disabled={isSubmitting}
                   />
                 ))}
               </div>
@@ -245,6 +331,7 @@ const CreateProject = ({ isOpen, onClose, onSubmit }) => {
                           ? "border-blue-500 bg-blue-50"
                           : "border-gray-300 hover:border-gray-400"
                       }`}
+                      disabled={isSubmitting}
                     >
                       <IconComponent
                         size={18}
@@ -269,6 +356,7 @@ const CreateProject = ({ isOpen, onClose, onSubmit }) => {
                   setFormData({ ...formData, category: e.target.value })
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={isSubmitting}
               >
                 {categories.map((category) => (
                   <option key={category.value} value={category.value}>
@@ -288,6 +376,7 @@ const CreateProject = ({ isOpen, onClose, onSubmit }) => {
                   setFormData({ ...formData, priority: e.target.value })
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={isSubmitting}
               >
                 {priorities.map((priority) => (
                   <option key={priority.value} value={priority.value}>
@@ -311,6 +400,7 @@ const CreateProject = ({ isOpen, onClose, onSubmit }) => {
                   setFormData({ ...formData, startDate: e.target.value })
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={isSubmitting}
               />
             </div>
 
@@ -325,6 +415,7 @@ const CreateProject = ({ isOpen, onClose, onSubmit }) => {
                   setFormData({ ...formData, endDate: e.target.value })
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={isSubmitting}
               />
             </div>
           </div>
@@ -345,6 +436,7 @@ const CreateProject = ({ isOpen, onClose, onSubmit }) => {
                     type="button"
                     onClick={() => handleRemoveTeamMember(member)}
                     className="hover:bg-blue-200 rounded-full p-0.5"
+                    disabled={isSubmitting}
                   >
                     <X size={12} />
                   </button>
@@ -359,11 +451,13 @@ const CreateProject = ({ isOpen, onClose, onSubmit }) => {
                 onKeyPress={(e) => handleKeyPress(e, "teamMember")}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Add team member..."
+                disabled={isSubmitting}
               />
               <button
                 type="button"
                 onClick={handleAddTeamMember}
-                className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+                disabled={isSubmitting}
               >
                 Add
               </button>
@@ -385,7 +479,8 @@ const CreateProject = ({ isOpen, onClose, onSubmit }) => {
                   <button
                     type="button"
                     onClick={() => handleRemoveGoal(goal)}
-                    className="text-red-500 hover:text-red-700"
+                    className="text-red-500 hover:text-red-700 disabled:opacity-50"
+                    disabled={isSubmitting}
                   >
                     <X size={16} />
                   </button>
@@ -400,11 +495,13 @@ const CreateProject = ({ isOpen, onClose, onSubmit }) => {
                 onKeyPress={(e) => handleKeyPress(e, "goal")}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Add project goal..."
+                disabled={isSubmitting}
               />
               <button
                 type="button"
                 onClick={handleAddGoal}
-                className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+                disabled={isSubmitting}
               >
                 Add
               </button>
@@ -421,6 +518,7 @@ const CreateProject = ({ isOpen, onClose, onSubmit }) => {
                 setFormData({ ...formData, isPrivate: e.target.checked })
               }
               className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              disabled={isSubmitting}
             />
             <label
               htmlFor="private"
@@ -435,19 +533,20 @@ const CreateProject = ({ isOpen, onClose, onSubmit }) => {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-50"
+              disabled={isSubmitting}
             >
               Cancel
             </button>
             <button
-              type="button"
-              onClick={handleSubmit}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              type="submit"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
+              disabled={isSubmitting}
             >
-              Create Project
+              {isSubmitting ? "Creating..." : "Create Project"}
             </button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );
