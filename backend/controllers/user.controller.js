@@ -318,15 +318,13 @@ const getUserAndToken = asyncHandler(async (req, res) => {
     try {
         // req.user is available because of the auth middleware
         const user = req.user;
-
+        const  token = req.cookies.accessToken || req.header("Authorization")?.replace("Bearer ", "");
 
         if (!user) {
             throw new ApiError(404, "User not found");
         }
 
-        return res.status(200).json(
-            new ApiResponse(200, user, "User fetched successfully")
-        );
+        
     } catch (error) {
         throw new ApiError(500, "Internal server error while getting user");
     }

@@ -1,13 +1,14 @@
 import { Router } from "express"
 import { loginUser, logOutUser, registerUser, refreshAccessToken, getUserAndToken, getUserById } from "../controllers/user.controller.js"
 import { verifyJWT } from "../middleware/auth.middleware.js"
+// import JWT from "jsonwebtoken"
 
 const router = Router()
 
 router.route("/register").post(
     registerUser
 )
-router.route("/login").post(loginUser)
+router.route("/login").post(verifyJWT, loginUser)
 
 // secured routes
 

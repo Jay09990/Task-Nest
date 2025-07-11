@@ -64,7 +64,7 @@ userSchema.methods.generateAccessToken = function () {
 };
 
 userSchema.methods.generateRefreshToken = function () {
-  JWT.sign(
+  return JWT.sign(
     {
       _id: this._id,
       email: this.email,

@@ -77,10 +77,6 @@ const Login = () => {
         }
       );
 
-      // Success handling
-      // console.log("login successful:", response.data);
-      // alert("login successful! Welcome " + formData.userName);
-
       // Clear form after success
       setFormData({
         userName: "",
@@ -89,6 +85,7 @@ const Login = () => {
       });
 
       login(response.data.user, response.data.token);
+      console.log("Login successful:", response.data);
 
       navigate("/Dashboard");
     } catch (error) {

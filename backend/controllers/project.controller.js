@@ -3,6 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import {Project}  from "../models/project.model.js";
+import cookies from "cookies";
 
 // Create a new project
 export const createProject = asyncHandler(async (req, res) => {
@@ -11,12 +12,12 @@ export const createProject = asyncHandler(async (req, res) => {
 
         // Get user ID from the authenticated user
         const userId = req.user._id;
-        
+
         const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
-                
-                if (!incomingRefreshToken) {
-                    throw new ApiError(401, "Unauthorized: No refresh token provided");
-                }
+
+        if (!incomingRefreshToken) {
+            throw new ApiError(401, "Unauthorized: No refresh token provided");
+        }
 
         // Validate required fields
         if (!name?.trim()) {
