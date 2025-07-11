@@ -1,14 +1,5 @@
 import { useState, useEffect } from "react";
-import { useContext } from "react";
-import {
-  X,
-  Folder,
-  Palette,
-  Target,
-  Calendar,
-  User,
-  FileText,
-} from "lucide-react";
+import { X, Folder, Target, Calendar, User, FileText } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useApp } from "../context/AppContext";
 
@@ -16,17 +7,13 @@ const CreateProject = ({ isOpen, onClose }) => {
   const { actions } = useApp();
   const { user, token, isAuthenticated, isLoading } = useAuth();
 
-  // Debug logging
-  useEffect(() => {
-    console.log("=== CreateProject Debug Info ===");
-    console.log("user:", user);
-    console.log("token:", token);
-    console.log("isAuthenticated:", isAuthenticated);
-    console.log("isLoading:", isLoading);
-    console.log("typeof user:", typeof user);
-    console.log("typeof token:", typeof token);
-    console.log("================================");
-  }, [user, token, isAuthenticated, isLoading]);
+  // Local state for debugging localStorage
+  const [debugInfo, setDebugInfo] = useState({
+    localStorageUser: null,
+    localStorageToken: null,
+    contextUser: null,
+    contextToken: null,
+  });
 
   const [formData, setFormData] = useState({
     name: "",
@@ -46,16 +33,90 @@ const CreateProject = ({ isOpen, onClose }) => {
   const [newGoal, setNewGoal] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Debug localStorage access
+  useEffect(() => {
+    if (isOpen) {
+      try {
+        const storedUser = localStorage.getItem("user");
+        const storedToken = localStorage.getItem("token");
+
+        console.log("=== localStorage Debug ===");
+        console.log("Raw localStorage user:", storedUser);
+        console.log("Raw localStorage token:", storedToken);
+
+        let parsedUser = null;
+        if (storedUser && storedUser !== "undefined" && storedUser !== "null") {
+          try {
+            parsedUser = JSON.parse(storedUser);
+            console.log("Parsed user:", parsedUser);
+          } catch (e) {
+            console.error("Error parsing user:", e);
+          }
+        }
+
+        setDebugInfo({
+          localStorageUser: parsedUser,
+          localStorageToken: storedToken,
+          contextUser: user,
+          contextToken: token,
+        });
+
+        console.log("=== Context Debug ===");
+        console.log("Context user:", user);
+        console.log("Context token:", token);
+        console.log("Context isAuthenticated:", isAuthenticated);
+        console.log("Context isLoading:", isLoading);
+      } catch (error) {
+        console.error("Error accessing localStorage:", error);
+      }
+    }
+  }, [isOpen, user, token, isAuthenticated, isLoading]);
+
   // Show loading state while auth is loading
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-lg shadow-xl p-6">
-          <div className="text-center">Loading...</div>
+          <div className="text-center">Loading authentication...</div>
         </div>
       </div>
     );
   }
+
+  // If not authenticated, try to get data directly from localStorage as fallback
+  const getAuthData = () => {
+    if (isAuthenticated && user && token) {
+      return { user, token, isAuthenticated: true };
+    }
+
+    // Fallback: Try to get directly from localStorage
+    try {
+      const storedUser = localStorage.getItem("user");
+      const storedToken = localStorage.getItem("token");
+
+      if (
+        storedUser &&
+        storedUser !== "undefined" &&
+        storedUser !== "null" &&
+        storedToken
+      ) {
+        const parsedUser = JSON.parse(storedUser);
+        console.log("Using localStorage fallback:", {
+          parsedUser,
+          storedToken,
+        });
+        return {
+          user: parsedUser,
+          token: storedToken,
+          isAuthenticated: true,
+        };
+      }
+    } catch (error) {
+      console.error("Error in localStorage fallback:", error);
+    }
+
+    return { user: null, token: null, isAuthenticated: false };
+  };
 
   const colors = [
     { name: "Blue", value: "#3B82F6", bg: "bg-blue-500" },
@@ -94,16 +155,15 @@ const CreateProject = ({ isOpen, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log("=== Submit Debug ===");
-    console.log("user at submit:", user);
-    console.log("token at submit:", token);
-    console.log("isAuthenticated at submit:", isAuthenticated);
+    // Get auth data with fallback
+    const authData = getAuthData();
 
-    if (!isAuthenticated || !user || !token) {
+    console.log("=== Submit Debug ===");
+    console.log("Auth data:", authData);
+
+    if (!authData.isAuthenticated || !authData.user || !authData.token) {
       console.log("Authentication check failed");
-      console.log("isAuthenticated:", isAuthenticated);
-      console.log("user:", user);
-      console.log("token:", token);
+      console.log("Available data:", authData);
 
       actions.setError("Please log in to create a project");
       return;
@@ -118,27 +178,34 @@ const CreateProject = ({ isOpen, onClose }) => {
     actions.setLoading(true);
     actions.clearError();
 
+    // Include user ID in project data
     const projectData = {
       ...formData,
+      userId: authData.user.id || authData.user._id, // Handle both id formats
+      createdBy: authData.user.id || authData.user._id,
       startDate: formData.startDate || null,
       endDate: formData.endDate || null,
     };
 
     try {
-      console.log("Sending request with token:", token);
+      console.log("Sending request with:");
+      console.log("Token:", authData.token);
+      console.log("Project data:", projectData);
+
       const response = await fetch(
         "http://localhost:8000/tasknest/api/v1/projects",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${authData.token}`,
           },
           body: JSON.stringify(projectData),
         }
       );
 
       const result = await response.json();
+      console.log("API Response:", result);
 
       if (response.ok) {
         actions.addProject(result.data);
@@ -146,10 +213,11 @@ const CreateProject = ({ isOpen, onClose }) => {
         onClose();
         actions.setError(null);
       } else {
+        console.error("API Error:", result);
         actions.setError(result.message || "Failed to create project");
       }
     } catch (error) {
-      console.error("Error creating project:", error);
+      console.error("Request Error:", error);
       actions.setError("Failed to create project. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -227,6 +295,9 @@ const CreateProject = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
+  // Get current auth data for display
+  const currentAuthData = getAuthData();
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -243,10 +314,26 @@ const CreateProject = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Auth Debug Info - Remove this in production */}
-        <div className="p-4 bg-gray-50 border-b text-sm">
-          <strong>Debug Info:</strong> User: {user ? "✓" : "✗"} | Token:{" "}
-          {token ? "✓" : "✗"} | Authenticated: {isAuthenticated ? "✓" : "✗"}
+        {/* Enhanced Debug Info */}
+        <div className="p-4 bg-gray-50 border-b text-sm space-y-2">
+          <div>
+            <strong>Debug Info:</strong>
+          </div>
+          <div>
+            Context - User: {user ? "✓" : "✗"} | Token: {token ? "✓" : "✗"} |
+            Auth: {isAuthenticated ? "✓" : "✗"}
+          </div>
+          <div>
+            localStorage - User: {debugInfo.localStorageUser ? "✓" : "✗"} |
+            Token: {debugInfo.localStorageToken ? "✓" : "✗"}
+          </div>
+          <div>Current Auth: {currentAuthData.isAuthenticated ? "✓" : "✗"}</div>
+          {currentAuthData.user && (
+            <div>
+              User ID:{" "}
+              {currentAuthData.user.id || currentAuthData.user._id || "No ID"}
+            </div>
+          )}
         </div>
 
         {/* Form */}
@@ -541,7 +628,7 @@ const CreateProject = ({ isOpen, onClose }) => {
             <button
               type="submit"
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !currentAuthData.isAuthenticated}
             >
               {isSubmitting ? "Creating..." : "Create Project"}
             </button>
