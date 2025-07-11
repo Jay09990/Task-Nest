@@ -87,8 +87,8 @@ const Login = () => {
         email: "",
         password: "",
       });
-
-      login(response.data.user, response.data.token);
+      
+      login(response.data.data.user, response.data.data.accessToken);
 
       navigate("/Dashboard");
     } catch (error) {
