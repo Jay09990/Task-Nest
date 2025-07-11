@@ -82,13 +82,11 @@ const Login = () => {
         userName: "",
         email: "",
         password: "",
-      });
-<<<<<<< HEAD
-
-=======
+      }); 
       
       login(response.data.data.user, response.data.data.accessToken);
->>>>>>> 882803f273be4ae84eaaef6138bc220027f1b0eb
+
+
 
       navigate("/Dashboard");
     } catch (error) {
