@@ -29,10 +29,21 @@ app.use((req, res, next) => {
 
 import userRouter from "./routes/user.routes.js"
 import projectRoutes from "./routes/project.routes.js";
+<<<<<<< HEAD
 
 //routes declaration
 
 app.use("/api/users", userRouter)
 app.use("/api/projects", projectRoutes);
+=======
+
+
+
+//routes declaration
+
+app.use("/tasknest/api/users", userRouter)
+app.use("/tasknest/api/v1/projects", projectRoutes);
+
+>>>>>>> 47a76f9a42b0d62a74ea9a6bc9b8980970be88b9
 
 export { app }

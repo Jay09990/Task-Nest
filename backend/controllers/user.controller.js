@@ -26,7 +26,7 @@ const generateAccessTokenAndRefreshToken = async (userId) => {
     }
 }
 
-const registerUser = asyncHandler(async (req, res) => {    
+const registerUser = asyncHandler(async (req, res) => {
     // Better validation for request body
     if (!req.body || Object.keys(req.body).length === 0) {
         throw new ApiError(400, "Request body is missing or empty")
@@ -144,7 +144,11 @@ const loginUser = asyncHandler(async (req, res) => {
     // Cookie options
     const options = {
         httpOnly: true,
+<<<<<<< HEAD
         secure: 'false',
+=======
+        secure: false,
+>>>>>>> 47a76f9a42b0d62a74ea9a6bc9b8980970be88b9
         sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     }
@@ -319,6 +323,41 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, user, "Account details updated successfully"))
 })
 
+const getUserAndToken = asyncHandler(async (req, res) => {
+    try {
+        // req.user is available because of the auth middleware
+        const user = req.user;
+        const  token = req.cookies.accessToken || req.header("Authorization")?.replace("Bearer ", "");
+
+        if (!user) {
+            throw new ApiError(404, "User not found");
+        }
+
+        
+    } catch (error) {
+        throw new ApiError(500, "Internal server error while getting user");
+    }
+});
+
+// Get user by ID (if you need this for other purposes)
+const getUserById = asyncHandler(async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const user = await User.findById(userId).select("-password -refreshToken");
+
+        if (!user) {
+            throw new ApiError(404, "User not found");
+        }
+
+        return res.status(200).json(
+            new ApiResponse(200, user, "User fetched successfully")
+        );
+    } catch (error) {
+        throw new ApiError(500, "Internal server error while getting user");
+    }
+});
+
 export {
     registerUser,
     loginUser,
@@ -326,5 +365,7 @@ export {
     refreshAccessToken,
     getCurrentUser,
     changeCurrentPassword,
+    getUserAndToken,
+    getUserById,
     updateAccountDetails
 }

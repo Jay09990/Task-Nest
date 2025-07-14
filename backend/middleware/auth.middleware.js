@@ -6,6 +6,7 @@ import { User } from "../models/user.model.js";
 const verifyJWT = asyncHandler(async (req, res, next) => {
     try {
         const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
+        
         if (!token) {
             return next(new ApiError(401, "Access token is missing"));
         }
@@ -14,13 +15,13 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
         const user = await User.findById(decodedToken?._id).select("-password -refreshTokens")
 
         if (!user) {
-
             throw new ApiError(401, "access token is invalid");
         }
 
         req.user = user;
         next();
     } catch (error) {
+        console.log("Error in verifyJWT middleware:", error);
         throw new ApiError(401, error?.message || "Access token is invalid or expired");
     }
 })
