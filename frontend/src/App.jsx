@@ -9,8 +9,7 @@ import { useState } from "react";
 
 // Create a separate component that uses the context
 function AppContent() {
-  const { tasks, projects, actions } = useApp();
-  const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
+  const { tasks, projects, actions } = useApp();  const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
 
   const handleAddTask = (taskData) => {

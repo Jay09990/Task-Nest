@@ -15,101 +15,33 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Helper function to safely access localStorage
-  const getStorageItem = (key) => {
-    try {
-      const item = localStorage.getItem(key);
-      return item;
-    } catch (error) {
-      console.error(`Error reading ${key} from localStorage:`, error);
-      return null;
-    }
-  };
-
-  // Helper function to safely set localStorage
-  const setStorageItem = (key, value) => {
-    try {
-      localStorage.setItem(key, value);
-      return true;
-    } catch (error) {
-      console.error(`Error setting ${key} in localStorage:`, error);
-      return false;
-    }
-  };
-
-  // Helper function to safely remove from localStorage
-  const removeStorageItem = (key) => {
-    try {
-      localStorage.removeItem(key);
-      return true;
-    } catch (error) {
-      console.error(`Error removing ${key} from localStorage:`, error);
-      return false;
-    }
-  };
-
   useEffect(() => {
-    const storedUser = getStorageItem("user");
-    const storedToken = getStorageItem("token");
+    const storedUser = localStorage.getItem("user");
+    const storedToken = localStorage.getItem("token");
 
-    // Validate and set user data
-    if (storedUser && storedUser !== "undefined" && storedUser !== "null") {
+    if (storedUser && storedUser !== "undefined" && storedToken) {
       try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-      } catch (error) {
-        console.error("Error parsing user data from localStorage:", error);
-        // Clean up invalid data
-        removeStorageItem("user");
+        setUser(JSON.parse(storedUser));
+      } catch {
         setUser(null);
       }
-    }
-
-    // Validate and set token
-    if (storedToken && storedToken !== "undefined" && storedToken !== "null") {
       setToken(storedToken);
     }
-
     setIsLoading(false);
   }, []);
 
   const login = (userData, authToken) => {
-    // Validate input parameters
-    if (!userData || !authToken) {
-      console.error("Login failed: userData and authToken are required");
-      return false;
-    }
-
-    try {
-      // Update state first
-      setUser(userData);
-      setToken(authToken);
-
-      // Then update localStorage
-      const userStored = setStorageItem("user", JSON.stringify(userData));
-      const tokenStored = setStorageItem("token", authToken);
-
-      if (!userStored || !tokenStored) {
-        console.warn(
-          "Warning: Some data may not have been stored in localStorage"
-        );
-      }
-
-      return true;
-    } catch (error) {
-      console.error("Login failed:", error);
-      return false;
-    }
+    setUser(userData);
+    setToken(authToken);
+    localStorage.setItem("user", JSON.stringify(userData));
+    localStorage.setItem("token", authToken);
   };
 
   const logout = () => {
-    // Update state first
     setUser(null);
     setToken(null);
-
-    // Then clear localStorage
-    removeStorageItem("user");
-    removeStorageItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
   };
 
   const value = {

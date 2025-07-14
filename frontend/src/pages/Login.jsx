@@ -8,7 +8,6 @@ const Login = () => {
   const location = useLocation();
   const { login } = useAuth();
   const navigate = useNavigate();
-
   // Get success message from location state if available
   const successMessage = location.state?.message;
 
@@ -76,7 +75,7 @@ const Login = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:8000/tasknest/api/users/login",
+        "http://localhost:8000/api/users/login",
         {
           userName: formData.userName, // Assuming userName is used for login
           email: formData.email,
@@ -84,31 +83,21 @@ const Login = () => {
         }
       );
 
-<<<<<<< HEAD
       // Success handling
       // console.log("login successful:", response.data);
       // alert("login successful! Welcome " + formData.userName);
 
-=======
->>>>>>> 47a76f9a42b0d62a74ea9a6bc9b8980970be88b9
       // Clear form after success
       setFormData({
         userName: "",
         email: "",
         password: "",
-<<<<<<< HEAD
       });
 
       login(response.data.user, response.data.accessToken);
 
      localStorage.setItem("user", JSON.stringify(response.data.data.user));
      localStorage.setItem("token", response.data.data.accessToken);
-=======
-      }); 
-      
-      login(response.data.data.user, response.data.data.accessToken);
-
->>>>>>> 47a76f9a42b0d62a74ea9a6bc9b8980970be88b9
 
 
       navigate("/Dashboard");

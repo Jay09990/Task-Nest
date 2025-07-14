@@ -90,7 +90,7 @@ const Register = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:8000/tasknest/api/users/register",
+        "http://localhost:8000/api/users/register",
         {
           name: formData.name,
           userName: formData.userName,
@@ -99,19 +99,9 @@ const Register = () => {
         }
       );
 
-      const options = {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "Strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      };
-
-      res.cookie("accessToken", accessToken, options);
-      res.cookie("refreshToken", refreshToken, options);
-
-      // store it in localstorage
-      localStorage.setItem("accessToken", accessToken);
-      localStorage.setItem("refreshToken", refreshToken);
+      // Success handling
+      // console.log("Registration successful:", response.data);
+      // alert("Registration successful! Welcome " + formData.name);
 
       // Clear form after success
       setFormData({

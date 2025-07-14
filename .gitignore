@@ -1,7 +1,6 @@
 # === NODE.JS DEPENDENCIES ===
 node_modules/
 **/node_modules/
-TODOS.txt
 
 # === ENVIRONMENT VARIABLES ===
 .env
