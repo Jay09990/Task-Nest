@@ -1,0 +1,10 @@
+TODOS :
+
+backend :
+storing user data and passing it to project controller
+when user creates any new project that roject data should also store user's id to connect to that user which will make it easier for us to handle project created by specific user
+
+frontend:
+managing user storing and authentication
+right now the problem is that user's data is not accassible in create project component 
+and inn navbar also because even when user is logged in navbar shows the part in conditioned rendaring where user is not logged in which means user is also not accessible in that part

@@ -13,7 +13,7 @@ const Navbar = () => {
       {/* Right: Actions */}
       <div className="flex items-center space-x-4">
         {/* {user ? console.log("getting user") : console.log("not getting user")}; */}
-        
+
         {/* TODO: Fix user specific content rendering */}
         {user ? (
           // Logged-in: Show welcome message and logout
@@ -28,14 +28,16 @@ const Navbar = () => {
             </div>
 
             {/* Logout Button */}
-            <button
-              onClick={logout}
-              className="flex items-center space-x-1 px-3 py-1.5 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
-              title="Logout"
-            >
-              <LogOut size={16} />
-              <span>Logout</span>
-            </button>
+            <a href="/login">
+              <button
+                onClick={logout}
+                className="flex items-center space-x-1 px-3 py-1.5 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                title="Logout"
+              >
+                <LogOut size={16} />
+                <span>Logout</span>
+              </button>
+            </a>
           </div>
         ) : (
           // Not logged-in: Show Login / Register

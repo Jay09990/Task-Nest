@@ -4,10 +4,12 @@ import cookieParser from "cookie-parser"
 
 const app = express()
 
+// import cors from "cors";
+
 app.use(cors({
-    origin: process.env.CORS_ORIGIN,
-    credentials: true
-}))
+    origin: "http://localhost:5173", // 🔥 Your frontend's origin
+    credentials: true               // 🔥 Allow cookies to be sent
+}));
 
 app.use(express.json({ limit: '16kb' }))
 app.use(express.urlencoded({ extended: true, limit: '16kb' }))
@@ -26,9 +28,11 @@ app.use((req, res, next) => {
 // importing routes
 
 import userRouter from "./routes/user.routes.js"
+import projectRoutes from "./routes/project.routes.js";
 
 //routes declaration
 
 app.use("/api/users", userRouter)
+app.use("/api/projects", projectRoutes);
 
 export { app }

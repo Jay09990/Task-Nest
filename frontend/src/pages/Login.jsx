@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { CheckCircle, AlertCircle, Eye, EyeOff, LogIn } from "lucide-react";
 import axios from "axios";
-import { useLocation,useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context//AuthContext.jsx";
 
 const Login = () => {
@@ -47,6 +47,11 @@ const Login = () => {
       newErrors.email = "Please enter a valid email";
     }
 
+    // Username validation
+    if (!formData.userName) {
+      newErrors.userName = "Username is required";
+    }
+
     // Password validation
     if (!formData.password) {
       newErrors.password = "Password is required";
@@ -64,6 +69,8 @@ const Login = () => {
 
     if (!validateForm()) return;
 
+
+
     setIsLoading(true);
 
     try {
@@ -77,8 +84,8 @@ const Login = () => {
       );
 
       // Success handling
-      console.log("login successful:", response.data);
-      alert("login successful! Welcome " + formData.userName);
+      // console.log("login successful:", response.data);
+      // alert("login successful! Welcome " + formData.userName);
 
       // Clear form after success
       setFormData({
@@ -87,8 +94,12 @@ const Login = () => {
         password: "",
       });
 
-      login(response.data.user, response.data.token);
-      
+      login(response.data.user, response.data.accessToken);
+
+     localStorage.setItem("user", JSON.stringify(response.data.data.user));
+     localStorage.setItem("token", response.data.data.accessToken);
+
+
       navigate("/Dashboard");
     } catch (error) {
       console.error("Registration error:", error);
@@ -100,7 +111,9 @@ const Login = () => {
             setLoginError(error.response.data.message || "Invalid input data");
             break;
           case 500:
-            setLoginError("Server error. Please try again later, or you have not registered yet.");
+            setLoginError(
+              "Server error. Please try again later, or you have not registered yet."
+            );
             break;
           case 404:
             setLoginError("User not found. Please check your credentials.");

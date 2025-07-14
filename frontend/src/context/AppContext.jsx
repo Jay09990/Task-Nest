@@ -1,4 +1,5 @@
 import { Edit } from "lucide-react";
+import axios from "axios";
 import React, { createContext, useContext, useReducer } from "react";
 
 // Initial state
@@ -182,7 +183,6 @@ export const AppProvider = ({ children }) => {
     setTasks: (tasks) =>
       dispatch({ type: ActionTypes.SET_TASKS, payload: tasks }),
     addTask: (task) => dispatch({ type: ActionTypes.ADD_TASK, payload: task }),
-    // In AppContext.jsx, inside the actions object:
     editTask: (task) =>
       dispatch({ type: ActionTypes.EDIT_TASK, payload: task }),
     updateTask: (task) =>
@@ -214,6 +214,25 @@ export const AppProvider = ({ children }) => {
     setFilters: (filters) =>
       dispatch({ type: ActionTypes.SET_FILTERS, payload: filters }),
     clearError: () => dispatch({ type: ActionTypes.CLEAR_ERROR }),
+
+    // ✅ NEW: Fetch all projects from the API
+    fetchProjects: async () => {
+      try {
+        const res = await axios.get("/api/projects");
+        dispatch({ type: ActionTypes.SET_PROJECTS, payload: res.data.data });
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      }
+    },
+    createProject: async (projectData) => {
+      try {
+        const res = await axios.post("/api/projects", projectData);
+        const newProject = res.data.data;
+        dispatch({ type: ActionTypes.ADD_PROJECT, payload: newProject });
+      } catch (error) {
+        console.error("Error creating project:", error);
+      }
+    },
   };
 
   const value = {

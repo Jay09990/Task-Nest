@@ -1,5 +1,5 @@
 import { asyncHandler } from "../utils/asyncHandler.js"
-import { ApiError } from "../utils/apiError.js"
+import { ApiError } from "../utils/ApiError.js"
 import { User } from "../models/user.model.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken"
@@ -86,6 +86,9 @@ const registerUser = asyncHandler(async (req, res) => {
     // Get created user without sensitive fields
     const createdUser = await User.findById(user._id).select("-password -refreshTokens")
 
+    console.log(createdUser)
+
+
     if (!createdUser) {
         throw new ApiError(500, "Something went wrong while registering the user");
     }
@@ -93,6 +96,7 @@ const registerUser = asyncHandler(async (req, res) => {
     return res.status(201).json(
         new ApiResponse(201, createdUser, "User registered successfully")
     )
+
 })
 
 const loginUser = asyncHandler(async (req, res) => {
@@ -135,12 +139,13 @@ const loginUser = asyncHandler(async (req, res) => {
 
     // Get user data without sensitive fields
     const loggedInUser = await User.findById(user._id).select("-password -refreshTokens")
+    console.log(loggedInUser);
 
     // Cookie options
     const options = {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: 'false',
+        sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     }
 
@@ -166,8 +171,8 @@ const logOutUser = asyncHandler(async (req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
+        secure: 'false',
+        sameSite: 'lax'
     }
 
     return res.status(200)
@@ -204,8 +209,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
         const options = {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict'
+            secure: 'false',
+            sameSite: 'lax'
         }
 
         return res

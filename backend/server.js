@@ -1,12 +1,16 @@
 import dotenv from "dotenv"
 import connectDB from "./config/db.js"
 import { app } from "./app.js"
+import cookieParser from "cookie-parser"
+
 
 dotenv.config({
   path: "./env"
 })
 
+app.use(cookieParser())
 connectDB()
+
 
   .then(() => {
     try {

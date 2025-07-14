@@ -1,4 +1,6 @@
 import { useState } from "react";
+import axios from "axios";
+import { useApp } from "../context/AppContext";
 import {
   X,
   Folder,
@@ -10,6 +12,8 @@ import {
 } from "lucide-react";
 
 const CreateProject = ({ isOpen, onClose, onSubmit }) => {
+  const { actions } = useApp();
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -26,6 +30,7 @@ const CreateProject = ({ isOpen, onClose, onSubmit }) => {
 
   const [newTeamMember, setNewTeamMember] = useState("");
   const [newGoal, setNewGoal] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const colors = [
     { name: "Blue", value: "#3B82F6", bg: "bg-blue-500" },
@@ -61,23 +66,33 @@ const CreateProject = ({ isOpen, onClose, onSubmit }) => {
     { value: "high", label: "High" },
   ];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!formData.name.trim()) return;
 
-    // Prepare data for backend
-    const projectData = {
-      ...formData,
-      id: Date.now(), // Temporary ID, backend will generate proper ID
-      createdAt: new Date().toISOString(),
-      status: "active",
-      tasksCount: 0,
-      completedTasks: 0,
-      progress: 0,
-    };
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token"); // update if your token storage differs
 
-    onSubmit(projectData);
-    resetForm();
+      const res = await axios.post("/api/projects", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res.data.success) {
+        alert("Project created successfully!");
+        resetForm();
+        onClose();
+      }
+    } catch (error) {
+      console.error("Project creation error:", error);
+      alert(error?.response?.data?.message || "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+    await actions.createProject(data);
   };
 
   const resetForm = () => {
@@ -110,7 +125,6 @@ const CreateProject = ({ isOpen, onClose, onSubmit }) => {
       setNewTeamMember("");
     }
   };
-
   const handleRemoveTeamMember = (memberToRemove) => {
     setFormData({
       ...formData,

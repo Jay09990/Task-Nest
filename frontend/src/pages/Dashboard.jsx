@@ -7,14 +7,9 @@ import {
   ListChecks,
   Target,
   Folder,
-  MoreHorizontal,
   Plus,
-  ArrowRight,
-  CheckSquare,
-  Circle,
   AlertCircle,
   TrendingUp,
-  Users,
   FolderPlus,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
@@ -22,12 +17,12 @@ import TaskCard from "../components/Task";
 import ProjectCard from "../components/Project";
 import AddTask from "../components/AddTask";
 import CreateProject from "../components/CreateNewProject";
+import  axios  from "axios";
 
-const Dashboard = (onAddTask, onCreateProject) => {
+const Dashboard = () => {
   const { tasks, projects, actions, loading, error } = useApp();
 
   // Local state for dashboard-specific functionality
-  const [selectedTimeRange, setSelectedTimeRange] = useState("today");
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [showCreateTask, setShowCreateTask] = useState(false);
 
@@ -53,6 +48,33 @@ const Dashboard = (onAddTask, onCreateProject) => {
       )
     );
   }, [tasks]);
+
+  useEffect(() => {
+    const loadProjects = async () => {
+      actions.setLoading(true);
+      try {
+        const response = await axios.get("http://localhost:8000/api/projects", {
+          withCredentials: true, // important if using cookies for auth
+        });
+        // console.log(response);
+         return response.data;
+        
+        actions.setProjects(response.data);
+      } catch (err) {
+        console.error(
+          "Load Projects Error:",
+          err.response?.data || err.message
+        );
+        const errorMessage =
+          err.response?.data?.message || "Failed to load projects";
+        actions.setError(errorMessage);
+      } finally {
+        actions.setLoading(false);
+      }
+    };
+
+    loadProjects();
+  }, []);
 
   // Calculate task counts for summary cards
   const getCount = {
@@ -159,8 +181,7 @@ const Dashboard = (onAddTask, onCreateProject) => {
 
   // Handler functions for ProjectCard interactions
   const handleEditProject = (project) => {
-    // TODO: Implement edit project modal
-    actions.editProject(project);
+    actions.updateProject(project);
   };
 
   const handleDeleteProject = (projectId) => {
@@ -169,8 +190,6 @@ const Dashboard = (onAddTask, onCreateProject) => {
 
   const handleSelectProject = (project) => {
     actions.setActiveProject(project);
-    // TODO: Navigate to project detail page
-    console.log("Selected project:", project);
   };
 
   // Get recent projects (last 3 updated)
@@ -243,7 +262,7 @@ const Dashboard = (onAddTask, onCreateProject) => {
           projects={projects}
         />
       )}
-      
+
       {showCreateProject && (
         <CreateProject
           isOpen={showCreateProject}
