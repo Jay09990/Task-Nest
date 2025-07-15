@@ -8,7 +8,6 @@ import NotFound from "./utils/NotFound";
 import MainLayout from "./layout/MainLayout";
 import TasksView from "./pages/TaskView.component";
 
-
 function AppRoutes({ tasks, projects, onAddTask, onCreateProject }) {
   return (
     <Routes>
@@ -16,7 +15,6 @@ function AppRoutes({ tasks, projects, onAddTask, onCreateProject }) {
       <Route path="/" element={<TaskNestLanding />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-
       {/* Protected Routes */}
       <Route
         element={

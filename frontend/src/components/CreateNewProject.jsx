@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import axios from "axios";
 import { useApp } from "../context/AppContext";
 import {
@@ -11,8 +11,21 @@ import {
   FileText,
 } from "lucide-react";
 
-const CreateProject = ({ isOpen, onClose, onSubmit }) => {
+const CreateProject = ({ project, onSave, isOpen, onClose, onSubmit }) => {
   const { actions } = useApp();
+  const [name, setName] = useState(project?.name || "");
+  const [description, setDescription] = useState(project?.description || "");
+  const [status, setStatus] = useState(project?.status || "planning");
+  const [color, setColor] = useState(project?.color || "#3B82F6");
+
+  useEffect(() => {
+    if (project) {
+      setName(project.name || "");
+      setDescription(project.description || "");
+      setStatus(project.status || "planning");
+      setColor(project.color || "#3B82F6");
+    }
+  }, [project]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -85,6 +98,14 @@ const CreateProject = ({ isOpen, onClose, onSubmit }) => {
         alert("Project created successfully!");
         resetForm();
         onClose();
+
+        e.preventDefault();
+        onSave({
+          name,
+          description,
+          status,
+          color,
+        });
       }
     } catch (error) {
       console.error("Project creation error:", error);

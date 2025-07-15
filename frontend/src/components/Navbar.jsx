@@ -2,7 +2,14 @@ import { Bell, LogOut, UserPlus, LogIn } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
-  const { user, logout, isLoading } = useAuth();
+  const { user, logout, isLoading, login } = useAuth();
+
+  const loggedinUser = localStorage.getItem("")
+
+  // if () {
+    
+  // }
+
   if (isLoading) return null;
 
   return (

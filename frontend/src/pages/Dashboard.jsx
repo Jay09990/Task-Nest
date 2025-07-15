@@ -17,14 +17,15 @@ import TaskCard from "../components/Task";
 import ProjectCard from "../components/Project";
 import AddTask from "../components/AddTask";
 import CreateProject from "../components/CreateNewProject";
-import  axios  from "axios";
+import axios from "axios";
 
 const Dashboard = () => {
   const { tasks, projects, actions, loading, error } = useApp();
 
-  // Local state for dashboard-specific functionality
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [showCreateTask, setShowCreateTask] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+  const [editingProject, setEditingProject] = useState(null);
 
   // Task organization states
   const [pendingTasks, setPendingTasks] = useState([]);
@@ -32,16 +33,16 @@ const Dashboard = () => {
   const [completedTasks, setCompletedTasks] = useState([]);
   const [todayTasks, setTodayTasks] = useState([]);
 
+  // API base URL
+  const API_BASE_URL = "http://localhost:8000/api";
+
   // Update task lists whenever tasks change
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
 
-    // Filter tasks by status
     setPendingTasks(tasks.filter((task) => task.status === "pending"));
     setInProgressTasks(tasks.filter((task) => task.status === "in-progress"));
     setCompletedTasks(tasks.filter((task) => task.status === "completed"));
-
-    // Filter today's tasks
     setTodayTasks(
       tasks.filter(
         (task) => task.dueDate === today && task.status !== "completed"
@@ -49,14 +50,14 @@ const Dashboard = () => {
     );
   }, [tasks]);
 
+  // Load projects on component mount
   useEffect(() => {
     const loadProjects = async () => {
       actions.setLoading(true);
       try {
-        const response = await axios.get("http://localhost:8000/api/projects", {
+        const response = await axios.get(`${API_BASE_URL}/projects`, {
           withCredentials: true,
         });
-        
         actions.setProjects(response.data.data);
       } catch (err) {
         console.error(
@@ -74,7 +75,7 @@ const Dashboard = () => {
     loadProjects();
   }, []);
 
-  // Calculate task counts for summary cards
+  // Task statistics
   const getCount = {
     all: tasks.filter((task) => task.status !== "completed").length,
     today: tasks.filter(
@@ -91,7 +92,6 @@ const Dashboard = () => {
     }).length,
   };
 
-  // Enhanced summary cards with more metrics
   const summaryCards = [
     {
       title: "All Tasks",
@@ -159,38 +159,87 @@ const Dashboard = () => {
         : 0,
   };
 
-  // Handler functions for TaskCard interactions
-  const handleToggleComplete = (taskId) => {
-    actions.toggleTaskComplete(taskId);
+  // Task handlers
+  const handleToggleComplete = async (taskId) => {
+    try {
+      const task = tasks.find((t) => t._id === taskId);
+      const newStatus = task.status === "completed" ? "pending" : "completed";
+
+      await axios.patch(
+        `${API_BASE_URL}/tasks/${taskId}/status`,
+        { status: newStatus },
+        { withCredentials: true }
+      );
+      actions.toggleTaskComplete(taskId);
+    } catch (err) {
+      console.error("Toggle Complete Error:", err);
+      actions.setError(
+        err.response?.data?.message || "Failed to update task status"
+      );
+    }
   };
 
-  const handleToggleImportant = (taskId) => {
-    actions.toggleTaskImportant(taskId);
+  const handleToggleImportant = async (taskId) => {
+    try {
+      const task = tasks.find((t) => t._id === taskId);
+      const newImportantStatus = !task.isImportant;
+
+      await axios.patch(
+        `${API_BASE_URL}/tasks/${taskId}`,
+        { isImportant: newImportantStatus },
+        { withCredentials: true }
+      );
+      actions.toggleTaskImportant(taskId);
+    } catch (err) {
+      console.error("Toggle Important Error:", err);
+      actions.setError(
+        err.response?.data?.message || "Failed to update task importance"
+      );
+    }
   };
 
   const handleEditTask = (task) => {
-    // TODO: Implement edit task modal
-    actions.editTask(task);
+    setEditingTask(task);
+    setShowCreateTask(true);
   };
 
-  const handleDeleteTask = (taskId) => {
-    actions.deleteTask(taskId);
+  const handleDeleteTask = async (taskId) => {
+    try {
+      await axios.delete(`${API_BASE_URL}/tasks/${taskId}`, {
+        withCredentials: true,
+      });
+      actions.deleteTask(taskId);
+    } catch (err) {
+      console.error("Delete Task Error:", err);
+      actions.setError(err.response?.data?.message || "Failed to delete task");
+    }
   };
 
-  // Handler functions for ProjectCard interactions
+  // Project handlers
   const handleEditProject = (project) => {
-    actions.updateProject(project);
+    setEditingProject(project);
+    setShowCreateProject(true);
   };
 
-  const handleDeleteProject = (projectId) => {
-    actions.deleteProject(projectId);
+  const handleDeleteProject = async (projectId) => {
+    try {
+      await axios.delete(`${API_BASE_URL}/projects/${projectId}`, {
+        withCredentials: true,
+      });
+      actions.deleteProject(projectId);
+    } catch (err) {
+      console.error("Delete Project Error:", err);
+      actions.setError(
+        err.response?.data?.message || "Failed to delete project"
+      );
+    }
   };
 
   const handleSelectProject = (project) => {
     actions.setActiveProject(project);
   };
 
-  // Get recent projects (last 3 updated)
+  // Get recent projects
   const recentProjects = projects
     .sort(
       (a, b) =>
@@ -252,23 +301,74 @@ const Dashboard = () => {
       {showCreateTask && (
         <AddTask
           isOpen={showCreateTask}
-          onClose={() => setShowCreateTask(false)}
-          onSubmit={(taskData) => {
-            actions.addTask(taskData);
+          onClose={() => {
             setShowCreateTask(false);
+            setEditingTask(null);
           }}
+          onSubmit={async (taskData) => {
+            try {
+              const endpoint = editingTask
+                ? `${API_BASE_URL}/tasks/${editingTask._id}`
+                : `${API_BASE_URL}/tasks`;
+
+              const method = editingTask ? "put" : "post";
+
+              const response = await axios[method](endpoint, taskData, {
+                withCredentials: true,
+              });
+
+              editingTask
+                ? actions.updateTask(response.data)
+                : actions.addTask(response.data);
+
+              setShowCreateTask(false);
+              setEditingTask(null);
+            } catch (err) {
+              console.error("Task Error:", err);
+              actions.setError(
+                err.response?.data?.message || "Failed to save task"
+              );
+            }
+          }}
+          initialData={editingTask}
           projects={projects}
         />
       )}
 
+      {/* Create Project Modal */}
       {showCreateProject && (
         <CreateProject
           isOpen={showCreateProject}
-          onClose={() => setShowCreateProject(false)}
-          onSubmit={(projectData) => {
-            actions.addProject(projectData);
+          onClose={() => {
             setShowCreateProject(false);
+            setEditingProject(null);
           }}
+          onSubmit={async (projectData) => {
+            try {
+              const endpoint = editingProject
+                ? `${API_BASE_URL}/projects/${editingProject._id}`
+                : `${API_BASE_URL}/projects`;
+
+              const method = editingProject ? "put" : "post";
+
+              const response = await axios[method](endpoint, projectData, {
+                withCredentials: true,
+              });
+
+              editingProject
+                ? actions.updateProject(response.data)
+                : actions.addProject(response.data);
+
+              setShowCreateProject(false);
+              setEditingProject(null);
+            } catch (err) {
+              console.error("Project Error:", err);
+              actions.setError(
+                err.response?.data?.message || "Failed to save project"
+              );
+            }
+          }}
+          initialData={editingProject}
         />
       )}
 
@@ -324,147 +424,56 @@ const Dashboard = () => {
             <div className="text-2xl font-bold text-purple-600">
               {projectStats.completed}
             </div>
-            <div className="text-sm text-gray-500">Completed</div>
+            <div className="text-sm text-gray-500">Completed Projects</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-orange-600">
+            <div className="text-2xl font-bold text-yellow-600">
               {projectStats.avgProgress}%
             </div>
-            <div className="text-sm text-gray-500">Avg Progress</div>
+            <div className="text-sm text-gray-500">Avg. Progress</div>
           </div>
         </div>
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Today's Tasks Section */}
-        <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border-2 border-gray-200">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-800">
-                Today's Tasks
-              </h2>
-              <p className="text-sm text-gray-500">
-                {todayTasks.length} tasks scheduled
-              </p>
-            </div>
-            <button className="text-blue-500 hover:text-blue-600 text-sm font-medium">
-              View All
-            </button>
-          </div>
-
-          {todayTasks.length === 0 ? (
-            <div className="text-center py-12">
-              <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
-              <p className="text-gray-500">No tasks for today 🎉</p>
-              <p className="text-sm text-gray-400 mt-2">
-                Great job staying on top of things!
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {todayTasks.slice(0, 6).map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  onToggleComplete={handleToggleComplete}
-                  onToggleImportant={handleToggleImportant}
-                  onEdit={handleEditTask}
-                  onDelete={handleDeleteTask}
-                  projectName={
-                    projects.find((p) => p._id === task.project)?.name
-                  }
-                />
-              ))}
-            </div>
-          )}
-
-          {todayTasks.length > 6 && (
-            <button className="w-full mt-4 py-2 text-blue-500 hover:text-blue-600 text-sm font-medium border-t pt-4">
-              View {todayTasks.length - 6} more tasks
-            </button>
-          )}
-        </div>
-
-        {/* Recent Projects Section */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border-2 border-gray-200">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-800">
-                Recent Projects
-              </h2>
-              <p className="text-sm text-gray-500">Latest updates</p>
-            </div>
-            <button className="text-blue-500 hover:text-blue-600 text-sm font-medium">
-              View All
-            </button>
-          </div>
-
-          {recentProjects.length === 0 ? (
-            <div className="text-center py-8">
-              <Folder className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 mb-2">No projects yet</p>
-              <button
-                onClick={() => setShowCreateProject(true)}
-                className="text-blue-500 hover:text-blue-600 text-sm font-medium"
-              >
-                Create your first project
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {recentProjects.map((project) => (
-                <ProjectCard
-                  key={project._id}
-                  project={project}
-                  onEdit={handleEditProject}
-                  onDelete={handleDeleteProject}
-                  onSelect={handleSelectProject}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Task Distribution Section */}
-      <div className="mt-8 bg-white rounded-xl p-6 shadow-sm border-2 border-gray-200">
-        <h2 className="text-xl font-semibold text-gray-800 mb-6">
-          Task Distribution
+      {/* Recent Projects Section */}
+      <div className="mb-8">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">
+          Recent Projects
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="text-center p-4 bg-yellow-50 rounded-lg">
-            <div className="text-3xl font-bold text-yellow-600 mb-2">
-              {pendingTasks.length}
-            </div>
-            <div className="text-sm text-gray-600">Pending</div>
-            <div className="text-xs text-gray-500 mt-1">
-              {pendingTasks.length > 0 ? "Ready to start" : "All caught up!"}
-            </div>
-          </div>
-          <div className="text-center p-4 bg-blue-50 rounded-lg">
-            <div className="text-3xl font-bold text-blue-600 mb-2">
-              {inProgressTasks.length}
-            </div>
-            <div className="text-sm text-gray-600">In Progress</div>
-            <div className="text-xs text-gray-500 mt-1">
-              {inProgressTasks.length > 0
-                ? "Keep going!"
-                : "Start something new"}
-            </div>
-          </div>
-          <div className="text-center p-4 bg-green-50 rounded-lg">
-            <div className="text-3xl font-bold text-green-600 mb-2">
-              {completedTasks.length}
-            </div>
-            <div className="text-sm text-gray-600">Completed</div>
-            <div className="text-xs text-gray-500 mt-1">
-              {completedTasks.length > 0
-                ? "Great work!"
-                : "Complete your first task"}
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {recentProjects.map((project) => (
+            <ProjectCard
+              key={project._id}
+              project={project}
+              onEdit={handleEditProject}
+              onDelete={handleDeleteProject}
+              onSelect={handleSelectProject}
+            />
+          ))}
         </div>
+      </div>
+
+      {/* Today's Tasks Section */}
+      <div>
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">
+          Today’s Tasks
+        </h2>
+        {todayTasks.length === 0 ? (
+          <p className="text-gray-500">No tasks due today.</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {todayTasks.map((task) => (
+              <TaskCard
+                key={task._id}
+                task={task}
+                onToggleComplete={handleToggleComplete}
+                onToggleImportant={handleToggleImportant}
+                onEdit={handleEditTask}
+                onDelete={handleDeleteTask}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

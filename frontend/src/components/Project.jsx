@@ -1,21 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Calendar,
   Clock,
-  Star,
-  CheckCircle,
-  Circle,
   Edit3,
   Trash2,
-  Flag,
-  Users,
   FileText,
   MoreVertical,
-  AlertCircle,
 } from "lucide-react";
 
 const ProjectCard = ({ project, onEdit, onDelete, onSelect }) => {
   const [showActions, setShowActions] = useState(false);
+  const [editingProject, setEditingProject] = useState(null); // null means creating
+
+  const actionsRef = useRef();
 
   const getProgressColor = (progress) => {
     if (progress >= 80) return "bg-green-500";
@@ -38,13 +35,25 @@ const ProjectCard = ({ project, onEdit, onDelete, onSelect }) => {
     }
   };
 
+  // Close action menu if clicked outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (actionsRef.current && !actionsRef.current.contains(e.target)) {
+        setShowActions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
-    <div
-      className="relative bg-white rounded-xl shadow-sm border-2 border-gray-200 hover:shadow-md hover:scale-105 transition-all duration-200 cursor-pointer"
-      onClick={() => onSelect?.(project)}
-    >
-      <div className="p-6">
+    <div className="relative bg-white rounded-xl shadow-sm border-2 border-gray-200 hover:shadow-md hover:scale-105 transition-all duration-200">
+      <div
+        className="absolute inset-0 z-0 cursor-pointer"
+        onClick={() => onSelect?.(project)}
+      />
+
+      <div className="relative z-10 p-6">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center space-x-3">
@@ -64,13 +73,15 @@ const ProjectCard = ({ project, onEdit, onDelete, onSelect }) => {
                   project.status
                 )}`}
               >
-                {project.status?.replace("-", " ").charAt(0).toUpperCase() +
-                  project.status?.replace("-", " ").slice(1)}
+                {project.status
+                  ?.replace("-", " ")
+                  .replace(/^\w/, (c) => c.toUpperCase())}
               </span>
             </div>
           </div>
 
-          <div className="relative">
+          {/* Actions */}
+          <div className="relative z-20" ref={actionsRef}>
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -82,12 +93,12 @@ const ProjectCard = ({ project, onEdit, onDelete, onSelect }) => {
             </button>
 
             {showActions && (
-              <div className="absolute right-0 top-10 bg-white rounded-lg shadow-lg border z-10 py-1 min-w-[120px]">
+              <div className="absolute right-0 top-10 bg-white rounded-lg shadow-lg border z-30 py-1 min-w-[120px]">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onEdit?.(project);
                     setShowActions(false);
+                    onEdit?.(project);
                   }}
                   className="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
                 >
@@ -97,8 +108,8 @@ const ProjectCard = ({ project, onEdit, onDelete, onSelect }) => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onDelete?.(project.id);
                     setShowActions(false);
+                    onDelete?.(project._id);
                   }}
                   className="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 text-red-600"
                 >
@@ -117,20 +128,24 @@ const ProjectCard = ({ project, onEdit, onDelete, onSelect }) => {
           </p>
         )}
 
-        {/* Progress Bar */}
+        {/* Progress */}
         <div className="mb-4">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm text-gray-600">Progress</span>
             <span className="text-sm font-semibold text-gray-800">
-              {project.progress || 0}%
+              {Number.isFinite(project.progress) ? project.progress : 0}%
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
-              className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(
+              className={`h-2 rounded-full ${getProgressColor(
                 project.progress || 0
               )}`}
-              style={{ width: `${project.progress || 0}%` }}
+              style={{
+                width: `${
+                  Number.isFinite(project.progress) ? project.progress : 0
+                }%`,
+              }}
             ></div>
           </div>
         </div>
@@ -167,11 +182,12 @@ const ProjectCard = ({ project, onEdit, onDelete, onSelect }) => {
               Created {new Date(project.createdAt).toLocaleDateString()}
             </span>
           </div>
+
           {project.team && project.team.length > 0 && (
             <div className="flex -space-x-2">
-              {project.team.slice(0, 3).map((member) => (
+              {project.team.slice(0, 3).map((member, idx) => (
                 <div
-                  key={member}
+                  key={idx}
                   className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-400 to-purple-400 border-2 border-white flex items-center justify-center text-xs text-white font-semibold"
                 >
                   {member.charAt(0).toUpperCase()}
@@ -186,12 +202,6 @@ const ProjectCard = ({ project, onEdit, onDelete, onSelect }) => {
           )}
         </div>
       </div>
-
-      {/* Click handler for the entire card */}
-      <div
-        className="absolute inset-0 z-0"
-        onClick={() => onSelect?.(project)}
-      />
     </div>
   );
 };

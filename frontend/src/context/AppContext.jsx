@@ -2,7 +2,6 @@ import { Edit } from "lucide-react";
 import axios from "axios";
 import React, { createContext, useContext, useReducer } from "react";
 
-// Initial state
 const initialState = {
   tasks: [],
   projects: [],
@@ -17,9 +16,7 @@ const initialState = {
   },
 };
 
-// Action types
 const ActionTypes = {
-  // Task actions
   SET_TASKS: "SET_TASKS",
   ADD_TASK: "ADD_TASK",
   UPDATE_TASK: "UPDATE_TASK",
@@ -27,39 +24,24 @@ const ActionTypes = {
   EDIT_TASK: "EDIT_TASK",
   TOGGLE_TASK_COMPLETE: "TOGGLE_TASK_COMPLETE",
   TOGGLE_TASK_IMPORTANT: "TOGGLE_TASK_IMPORTANT",
-
-  // Project actions
   SET_PROJECTS: "SET_PROJECTS",
   ADD_PROJECT: "ADD_PROJECT",
   UPDATE_PROJECT: "UPDATE_PROJECT",
   DELETE_PROJECT: "DELETE_PROJECT",
   SET_ACTIVE_PROJECT: "SET_ACTIVE_PROJECT",
-
-  // General actions
   SET_LOADING: "SET_LOADING",
   SET_ERROR: "SET_ERROR",
   SET_FILTERS: "SET_FILTERS",
   CLEAR_ERROR: "CLEAR_ERROR",
 };
 
-// Reducer function
 const appReducer = (state, action) => {
   switch (action.type) {
-    // Task actions
     case ActionTypes.SET_TASKS:
       return { ...state, tasks: action.payload };
-
     case ActionTypes.ADD_TASK:
       return { ...state, tasks: [...state.tasks, action.payload] };
-
     case ActionTypes.UPDATE_TASK:
-      return {
-        ...state,
-        tasks: state.tasks.map((task) =>
-          task.id === action.payload.id ? { ...task, ...action.payload } : task
-        ),
-      };
-
     case ActionTypes.EDIT_TASK:
       return {
         ...state,
@@ -67,13 +49,11 @@ const appReducer = (state, action) => {
           task.id === action.payload.id ? { ...task, ...action.payload } : task
         ),
       };
-
     case ActionTypes.DELETE_TASK:
       return {
         ...state,
         tasks: state.tasks.filter((task) => task.id !== action.payload),
       };
-
     case ActionTypes.TOGGLE_TASK_COMPLETE:
       return {
         ...state,
@@ -86,7 +66,6 @@ const appReducer = (state, action) => {
             : task
         ),
       };
-
     case ActionTypes.TOGGLE_TASK_IMPORTANT:
       return {
         ...state,
@@ -96,14 +75,10 @@ const appReducer = (state, action) => {
             : task
         ),
       };
-
-    // Project actions
     case ActionTypes.SET_PROJECTS:
       return { ...state, projects: action.payload };
-
     case ActionTypes.ADD_PROJECT:
       return { ...state, projects: [...state.projects, action.payload] };
-
     case ActionTypes.UPDATE_PROJECT:
       return {
         ...state,
@@ -113,7 +88,6 @@ const appReducer = (state, action) => {
             : project
         ),
       };
-
     case ActionTypes.DELETE_PROJECT:
       return {
         ...state,
@@ -122,36 +96,26 @@ const appReducer = (state, action) => {
         ),
         tasks: state.tasks.filter((task) => task.project !== action.payload),
       };
-
     case ActionTypes.SET_ACTIVE_PROJECT:
       return { ...state, activeProject: action.payload };
-
-    // General actions
     case ActionTypes.SET_LOADING:
       return { ...state, loading: action.payload };
-
     case ActionTypes.SET_ERROR:
       return { ...state, error: action.payload };
-
     case ActionTypes.SET_FILTERS:
       return { ...state, filters: { ...state.filters, ...action.payload } };
-
     case ActionTypes.CLEAR_ERROR:
       return { ...state, error: null };
-
     default:
       return state;
   }
 };
 
-// Create context
 const AppContext = createContext();
 
-// Provider component
 export const AppProvider = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  // Helper functions to calculate project stats
   const getProjectStats = (projectId) => {
     const projectTasks = state.tasks.filter(
       (task) => task.project === projectId
@@ -171,17 +135,14 @@ export const AppProvider = ({ children }) => {
     };
   };
 
-  // Enhanced projects with calculated stats
   const enhancedProjects = Array.isArray(state.projects)
     ? state.projects.map((project) => ({
         ...project,
-        ...getProjectStats(project._id), // ✅ use _id, not project.id
+        ...getProjectStats(project._id),
       }))
     : [];
 
-  // Action creators
   const actions = {
-    // Task actions
     setTasks: (tasks) =>
       dispatch({ type: ActionTypes.SET_TASKS, payload: tasks }),
     addTask: (task) => dispatch({ type: ActionTypes.ADD_TASK, payload: task }),
@@ -196,19 +157,15 @@ export const AppProvider = ({ children }) => {
     toggleTaskImportant: (taskId) =>
       dispatch({ type: ActionTypes.TOGGLE_TASK_IMPORTANT, payload: taskId }),
 
-    // Project actions
     setProjects: (projects) =>
       dispatch({ type: ActionTypes.SET_PROJECTS, payload: projects }),
     addProject: (project) =>
       dispatch({ type: ActionTypes.ADD_PROJECT, payload: project }),
     updateProject: (project) =>
       dispatch({ type: ActionTypes.UPDATE_PROJECT, payload: project }),
-    deleteProject: (projectId) =>
-      dispatch({ type: ActionTypes.DELETE_PROJECT, payload: projectId }),
     setActiveProject: (project) =>
       dispatch({ type: ActionTypes.SET_ACTIVE_PROJECT, payload: project }),
 
-    // General actions
     setLoading: (loading) =>
       dispatch({ type: ActionTypes.SET_LOADING, payload: loading }),
     setError: (error) =>
@@ -217,7 +174,6 @@ export const AppProvider = ({ children }) => {
       dispatch({ type: ActionTypes.SET_FILTERS, payload: filters }),
     clearError: () => dispatch({ type: ActionTypes.CLEAR_ERROR }),
 
-    // ✅ NEW: Fetch all projects from the API
     fetchProjects: async () => {
       try {
         const res = await axios.get("/api/projects");
@@ -226,13 +182,32 @@ export const AppProvider = ({ children }) => {
         console.error("Error fetching projects:", error);
       }
     },
+
     createProject: async (projectData) => {
       try {
         const res = await axios.post("/api/projects", projectData);
-        const newProject = res.data.data;
-        dispatch({ type: ActionTypes.ADD_PROJECT, payload: newProject });
+        dispatch({ type: ActionTypes.ADD_PROJECT, payload: res.data.data });
       } catch (error) {
         console.error("Error creating project:", error);
+      }
+    },
+
+    deleteProject: async (projectId) => {
+      try {
+        await axios.delete(`/api/projects/${projectId}`);
+        dispatch({ type: ActionTypes.DELETE_PROJECT, payload: projectId });
+      } catch (error) {
+        console.error("Error deleting project:", error);
+      }
+    },
+
+    editProject: async (projectId, updatedData, onSuccess) => {
+      try {
+        const res = await axios.put(`/api/projects/${projectId}`, updatedData);
+        dispatch({ type: ActionTypes.UPDATE_PROJECT, payload: res.data.data });
+        if (onSuccess) onSuccess();
+      } catch (error) {
+        console.error("Error editing project:", error);
       }
     },
   };
@@ -247,7 +222,6 @@ export const AppProvider = ({ children }) => {
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
 
-// Custom hook to use the context
 export const useApp = () => {
   const context = useContext(AppContext);
   if (!context) {

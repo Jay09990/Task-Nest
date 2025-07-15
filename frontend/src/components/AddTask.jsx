@@ -1,18 +1,13 @@
 import { useState, useEffect } from "react";
+import axios from "axios"; // Import Axios
 import {
   X,
-  Calendar,
-  Clock,
   Star,
-  Flag,
-  User,
-  Tag,
-  FileText,
   Plus,
 } from "lucide-react";
 
 const AddTask = (props) => {
-  const { isOpen, onClose, onSubmit, initialData } = props;
+  const { isOpen, onClose, onSubmit, initialData, userId } = props; // Add userId prop
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -50,21 +45,29 @@ const AddTask = (props) => {
     { id: "health", name: "Health & Fitness", color: "text-red-700" },
   ];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.title.trim()) return;
 
     // Prepare data for backend
     const taskData = {
       ...formData,
-      id: Date.now(), // Temporary ID, backend will generate proper ID
+      userId, // Include user ID
+      project: formData.project, // Ensure project ID is included
       createdAt: new Date().toISOString(),
       status: "pending",
       completed: false,
     };
 
-    onSubmit(taskData);
-    resetForm();
+    try {
+      // Send POST request to create a new task
+      const response = await axios.post("/api/task", taskData);
+      onSubmit(response.data); // Call onSubmit with the response data
+      resetForm();
+    } catch (error) {
+      console.error("Error creating task:", error);
+      // Handle error (e.g., show a notification)
+    }
   };
 
   const resetForm = () => {
