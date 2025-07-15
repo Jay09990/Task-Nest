@@ -3,6 +3,7 @@ import mongoose from "mongoose"
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { ApiError } from "../utils/ApiError.js"
+import { User } from "../models/user.model.js"; 
 
 
 // Create a new project
@@ -54,11 +55,29 @@ const createProject = asyncHandler(async (req, res) => {
     if (endDate) projectData.endDate = new Date(endDate);
 
     // Add additional team members if provided
+    // if (teamMembers && Array.isArray(teamMembers)) {
+    //   // Filter out duplicates and ensure creator is included
+    //   const uniqueMembers = [...new Set([userId, ...teamMembers])];
+    //   projectData.teamMembers = uniqueMembers;
+    // }
     if (teamMembers && Array.isArray(teamMembers)) {
-      // Filter out duplicates and ensure creator is included
-      const uniqueMembers = [...new Set([userId, ...teamMembers])];
-      projectData.teamMembers = uniqueMembers;
+      const allMembers = [userId, ...teamMembers];
+
+      // Convert usernames to ObjectIds if needed
+      const resolvedMembers = await Promise.all(
+        allMembers.map(async (member) => {
+          // If already a valid ObjectId, return as is
+          if (mongoose.Types.ObjectId.isValid(member)) return member;
+
+          // Otherwise, assume it's a username and resolve it
+          const user = await User.findOne({ userName: member });
+          if (!user) throw new ApiError(404, `User not found: ${member}`);
+          return user._id;
+        })
+      );
+      projectData.teamMembers = [...new Set(resolvedMembers.map(id => id.toString()))];
     }
+
 
     // Create the project
     const project = new Project(projectData);

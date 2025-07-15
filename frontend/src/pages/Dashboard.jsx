@@ -54,12 +54,10 @@ const Dashboard = () => {
       actions.setLoading(true);
       try {
         const response = await axios.get("http://localhost:8000/api/projects", {
-          withCredentials: true, // important if using cookies for auth
+          withCredentials: true,
         });
-        // console.log(response);
-         return response.data;
         
-        actions.setProjects(response.data);
+        actions.setProjects(response.data.data);
       } catch (err) {
         console.error(
           "Load Projects Error:",
@@ -374,7 +372,7 @@ const Dashboard = () => {
                   onEdit={handleEditTask}
                   onDelete={handleDeleteTask}
                   projectName={
-                    projects.find((p) => p.id === task.project)?.name
+                    projects.find((p) => p._id === task.project)?.name
                   }
                 />
               ))}
@@ -417,7 +415,7 @@ const Dashboard = () => {
             <div className="space-y-4">
               {recentProjects.map((project) => (
                 <ProjectCard
-                  key={project.id}
+                  key={project._id}
                   project={project}
                   onEdit={handleEditProject}
                   onDelete={handleDeleteProject}

@@ -172,10 +172,12 @@ export const AppProvider = ({ children }) => {
   };
 
   // Enhanced projects with calculated stats
-  const enhancedProjects = state.projects.map((project) => ({
-    ...project,
-    ...getProjectStats(project.id),
-  }));
+  const enhancedProjects = Array.isArray(state.projects)
+    ? state.projects.map((project) => ({
+        ...project,
+        ...getProjectStats(project._id), // ✅ use _id, not project.id
+      }))
+    : [];
 
   // Action creators
   const actions = {

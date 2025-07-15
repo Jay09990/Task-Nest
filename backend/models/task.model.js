@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Project } from "./project.model";
+import { Project } from "./project.model.js";
 
 const taskSchema = new mongoose.Schema(
   {
@@ -58,18 +58,3 @@ const taskSchema = new mongoose.Schema(
 );
 
 export const Task = mongoose.model("Task", taskSchema);
-
-/*
-    ({
-    title: "",
-    description: "",
-    priority: "medium",
-    dueDate: "",
-    dueTime: "",
-    project: "",
-    tags: [],
-    assignee: "",
-    isImportant: false,
-  });
-
-*/

@@ -38,8 +38,12 @@ const ProjectCard = ({ project, onEdit, onDelete, onSelect }) => {
     }
   };
 
+
   return (
-    <div className="bg-white rounded-xl shadow-sm border-2 border-gray-200 hover:shadow-md hover:scale-105 transition-all duration-200 cursor-pointer">
+    <div
+      className="relative bg-white rounded-xl shadow-sm border-2 border-gray-200 hover:shadow-md hover:scale-105 transition-all duration-200 cursor-pointer"
+      onClick={() => onSelect?.(project)}
+    >
       <div className="p-6">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
@@ -165,9 +169,9 @@ const ProjectCard = ({ project, onEdit, onDelete, onSelect }) => {
           </div>
           {project.team && project.team.length > 0 && (
             <div className="flex -space-x-2">
-              {project.team.slice(0, 3).map((member, index) => (
+              {project.team.slice(0, 3).map((member) => (
                 <div
-                  key={index}
+                  key={member}
                   className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-400 to-purple-400 border-2 border-white flex items-center justify-center text-xs text-white font-semibold"
                 >
                   {member.charAt(0).toUpperCase()}

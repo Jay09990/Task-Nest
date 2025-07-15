@@ -29,10 +29,12 @@ app.use((req, res, next) => {
 
 import userRouter from "./routes/user.routes.js"
 import projectRoutes from "./routes/project.routes.js";
+import taskRoutes from "./routes/task.routes.js"
 
 //routes declaration
 
 app.use("/api/users", userRouter)
 app.use("/api/projects", projectRoutes);
+app.use("/api/task", taskRoutes)
 
 export { app }

@@ -93,16 +93,22 @@ const Sidebar = ({
   const createdProjects = projects.map((project) => {
     const colorClasses = getColorClasses(project.color);
     return {
-      id: project.id,
+      id: project._id,
       name: project.name,
       dotColor: colorClasses.dot,
       bgColor: colorClasses.bg,
       textColor: colorClasses.text,
-      count: getProjectTasksCount(project.id),
+      count: getProjectTasksCount(project._id),
       raw: project, // keep original for actions
     };
   });
+  
   const displayProjects = createdProjects.length > 0 ? createdProjects : defaultProjects;
+
+  displayProjects.forEach((p) => {
+    if (!p.id) console.warn("Missing project ID:", p);
+  });
+
 
   // Handle navigation - communicate with parent component
   const handleNavigation = (itemId) => {
@@ -130,6 +136,8 @@ const Sidebar = ({
     );
   };
 
+  
+
   const ProjectItem = ({ project }) => {
     const isActive = activeItem === `project-${project.id}`;
     const projectPath = `/tasks/project-${project.id}`;
@@ -146,7 +154,7 @@ const Sidebar = ({
             <div className={`w-3 h-3 rounded-full ${project.dotColor}`}></div>
             <span className="font-medium text-sm">{project.name}</span>
           </div>
-          <span className={`text-xs px-2 py-1 rounded-full ${isActive ? `${project.bgColor} ${project.textColor}` : "bg-gray-200 text-gray-600 group-hover:bg-gray-300"}`}>{project.count}</span>
+          <span className={`text-xs px-2 py-1 rounded-full ${isActive ? `${project.bgColor} ${project.textColor}` : "bg-gray-200 text-gray-600 group-hover:bg-gray-300"}`}>{project.count || 0}</span>
           <button
             className="ml-2 p-1 rounded-full hover:bg-gray-200"
             onClick={e => {
@@ -208,7 +216,7 @@ const Sidebar = ({
           </div>
         </div>
       </Link>
-      
+
       {/* Quick Actions */}
       <div className="p-4 border-b border-gray-200">
         <button
@@ -223,7 +231,11 @@ const Sidebar = ({
       <div className="flex-1 overflow-y-auto">
         <div className="p-4 space-y-1">
           {menuItems.map((item) => (
-            <MenuItem key={item.id} item={item} isActive={activeItem === item.id} />
+            <MenuItem
+              key={item.id}
+              item={item}
+              isActive={activeItem === item.id}
+            />
           ))}
         </div>
         {/* Projects Section */}
@@ -235,14 +247,22 @@ const Sidebar = ({
             {/* Toggle Projects Section */}
             <div className="flex items-center space-x-2">
               {isProjectsExpanded ? (
-                <ChevronDown size={16} className="text-gray-400 group-hover:text-gray-600" />
+                <ChevronDown
+                  size={16}
+                  className="text-gray-400 group-hover:text-gray-600"
+                />
               ) : (
-                <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600" />
+                <ChevronRight
+                  size={16}
+                  className="text-gray-400 group-hover:text-gray-600"
+                />
               )}
-              <span className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Projects</span>
+              <span className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                Projects
+              </span>
             </div>
             <button
-              onClick={e => {
+              onClick={(e) => {
                 e.stopPropagation();
                 onCreateProject();
               }}
@@ -254,8 +274,8 @@ const Sidebar = ({
           </div>
           {isProjectsExpanded && (
             <div className="space-y-1 ml-2">
-              {displayProjects.map((project) => (
-                <ProjectItem key={project.id} project={project} />
+              {displayProjects.map((project, index) => (
+                <ProjectItem key={project.id || index} project={project} />
               ))}
               {/* Add Project Button */}
               <button

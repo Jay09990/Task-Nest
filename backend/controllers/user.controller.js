@@ -143,11 +143,11 @@ const loginUser = asyncHandler(async (req, res) => {
 
     // Cookie options
     const options = {
-        httpOnly: true,
-        secure: 'false',
-        sameSite: 'lax',
+        httpOnly: true, // ✅ Prevents JS access (XSS protection)
+        secure: process.env.NODE_ENV === 'production', // ✅ Use HTTPS in prod
+        sameSite: "strict", // ✅ Helps mitigate CSRF
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    }
+    };
 
     return res.status(200)
         .cookie("accessToken", accessToken, options)

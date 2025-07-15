@@ -80,12 +80,13 @@ const Login = () => {
           userName: formData.userName, // Assuming userName is used for login
           email: formData.email,
           password: formData.password,
+        },
+        {
+          withCredentials: true
         }
       );
 
-      // Success handling
-      // console.log("login successful:", response.data);
-      // alert("login successful! Welcome " + formData.userName);
+      
 
       // Clear form after success
       setFormData({
