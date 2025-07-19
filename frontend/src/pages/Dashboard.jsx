@@ -27,14 +27,13 @@ const Dashboard = () => {
   const [editingTask, setEditingTask] = useState(null);
   const [editingProject, setEditingProject] = useState(null);
 
+
   // Task organization states
   const [pendingTasks, setPendingTasks] = useState([]);
   const [inProgressTasks, setInProgressTasks] = useState([]);
   const [completedTasks, setCompletedTasks] = useState([]);
   const [todayTasks, setTodayTasks] = useState([]);
 
-  // API base URL
-  const API_BASE_URL = "http://localhost:8000/api";
 
   // Update task lists whenever tasks change
   useEffect(() => {
@@ -43,19 +42,22 @@ const Dashboard = () => {
     setPendingTasks(tasks.filter((task) => task.status === "pending"));
     setInProgressTasks(tasks.filter((task) => task.status === "in-progress"));
     setCompletedTasks(tasks.filter((task) => task.status === "completed"));
+
     setTodayTasks(
-      tasks.filter(
-        (task) => task.dueDate === today && task.status !== "completed"
-      )
+      tasks.filter((task) => {
+        const taskDate = new Date(task.dueDate).toISOString().split("T")[0];
+        return taskDate === today && task.status !== "completed";
+      })
     );
   }, [tasks]);
+
 
   // Load projects on component mount
   useEffect(() => {
     const loadProjects = async () => {
       actions.setLoading(true);
       try {
-        const response = await axios.get(`${API_BASE_URL}/projects`, {
+        const response = await axios.get(`/api/projects`, {
           withCredentials: true,
         });
         actions.setProjects(response.data.data);
@@ -166,7 +168,7 @@ const Dashboard = () => {
       const newStatus = task.status === "completed" ? "pending" : "completed";
 
       await axios.patch(
-        `${API_BASE_URL}/tasks/${taskId}/status`,
+        `/api/tasks/${taskId}/status`,
         { status: newStatus },
         { withCredentials: true }
       );
@@ -185,7 +187,7 @@ const Dashboard = () => {
       const newImportantStatus = !task.isImportant;
 
       await axios.patch(
-        `${API_BASE_URL}/tasks/${taskId}`,
+        `/api/tasks/${taskId}`,
         { isImportant: newImportantStatus },
         { withCredentials: true }
       );
@@ -205,7 +207,7 @@ const Dashboard = () => {
 
   const handleDeleteTask = async (taskId) => {
     try {
-      await axios.delete(`${API_BASE_URL}/tasks/${taskId}`, {
+      await axios.delete(`/api/tasks/${taskId}`, {
         withCredentials: true,
       });
       actions.deleteTask(taskId);
@@ -223,7 +225,7 @@ const Dashboard = () => {
 
   const handleDeleteProject = async (projectId) => {
     try {
-      await axios.delete(`${API_BASE_URL}/projects/${projectId}`, {
+      await axios.delete(`/api/projects/${projectId}`, {
         withCredentials: true,
       });
       actions.deleteProject(projectId);
@@ -308,8 +310,8 @@ const Dashboard = () => {
           onSubmit={async (taskData) => {
             try {
               const endpoint = editingTask
-                ? `${API_BASE_URL}/tasks/${editingTask._id}`
-                : `${API_BASE_URL}/tasks`;
+                ? `/api/task/${editingTask._id}`
+                : `/api/task`;
 
               const method = editingTask ? "put" : "post";
 
@@ -332,6 +334,7 @@ const Dashboard = () => {
           }}
           initialData={editingTask}
           projects={projects}
+          openProjectModal={() => setShowCreateProject(true)}
         />
       )}
 
@@ -346,8 +349,8 @@ const Dashboard = () => {
           onSubmit={async (projectData) => {
             try {
               const endpoint = editingProject
-                ? `${API_BASE_URL}/projects/${editingProject._id}`
-                : `${API_BASE_URL}/projects`;
+                ? `/api/projects/${editingProject._id}`
+                : `/api/projects`;
 
               const method = editingProject ? "put" : "post";
 

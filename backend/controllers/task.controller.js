@@ -36,10 +36,6 @@ const createTask = asyncHandler(async (req, res) => {
         throw new ApiError(400, 'Due date is required');
     }
 
-    if (!category || !category.trim()) {
-        throw new ApiError(400, 'Category is required');
-    }
-
     // Validate project access if projectId is provided
     if (projectId) {
         if (!mongoose.Types.ObjectId.isValid(projectId)) {
@@ -93,7 +89,6 @@ const createTask = asyncHandler(async (req, res) => {
         dueTime: dueTime || null,
         project: projectId || null,
         tags: tags || [],
-        category: category.trim(),
         assignee: assigneeData,
         createdBy: userId
     };
@@ -101,6 +96,8 @@ const createTask = asyncHandler(async (req, res) => {
     // Create the task
     const task = new Task(taskData);
     await task.save();
+    console.log("saved tasks are",task);
+    
 
     // Populate project details if exists
     if (projectId) {

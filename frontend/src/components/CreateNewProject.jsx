@@ -109,7 +109,7 @@ const CreateProject = ({ project, onSave, isOpen, onClose, onSubmit }) => {
       }
     } catch (error) {
       console.error("Project creation error:", error);
-      alert(error?.response?.data?.message || "Something went wrong.");
+      // alert(error?.response?.data?.message || "Something went wrong.");
     } finally {
       setLoading(false);
     }

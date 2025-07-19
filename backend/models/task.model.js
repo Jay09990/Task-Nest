@@ -9,7 +9,7 @@ const taskSchema = new mongoose.Schema(
     },
     description: {
       type: String,
-      required: true,
+      // required: true,
     },
     priority: {
       type: String,
@@ -24,6 +24,7 @@ const taskSchema = new mongoose.Schema(
     dueDate: {
       type: Date,
       required: true,
+      // default:"",
     },
     dueTime: {
       type: String,
@@ -39,18 +40,10 @@ const taskSchema = new mongoose.Schema(
         default: null,
       },
     ],
-    category: {
-      type: String,
-      required: true,
-    },
     assignee: {
       name: {
         type: String,
         required: true,
-      },
-      avatar: {
-        type: String,
-        default: null,
       },
     },
   },

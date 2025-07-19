@@ -1,12 +1,9 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios"; // Import Axios
-import {
-  X,
-  Star,
-  Plus,
-} from "lucide-react";
+import { X, Star, Plus } from "lucide-react";
 
-const AddTask = (props) => {
+const AddTask = (props, openProjectModal) => {
   const { isOpen, onClose, onSubmit, initialData, userId } = props; // Add userId prop
   const [formData, setFormData] = useState({
     title: "",
@@ -19,6 +16,32 @@ const AddTask = (props) => {
     assignee: "",
     isImportant: false,
   });
+
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [errors, setErrors] = useState({});
+  const navigate = useNavigate();
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.title.trim()) newErrors.title = "Task title is required";
+    if (!formData.dueDate) newErrors.dueDate = "Due date is required";
+    if (!formData.dueTime) newErrors.dueTime = "Due time is required";
+    if (!formData.project) newErrors.project = "Project is required";
+    if (formData.project.length == 0) {
+      newErrors.project = "Will need a project first";
+      const isConfirmed = confirm("Are you sure you want to delete this task?");
+      if (isConfirmed) {
+        onClose(); // close Add Task modal
+      }
+    }
+    if (!formData.description)
+      newErrors.description = "Description is required";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0; // return true if no errors
+  };
 
   useEffect(() => {
     if (initialData) {
@@ -38,35 +61,51 @@ const AddTask = (props) => {
     { value: "high", label: "High", color: "bg-red-100 text-red-700" },
   ];
 
-  const projects = [
-    { id: "work", name: "Work Projects", color: "text-blue-700" },
-    { id: "personal", name: "Personal", color: "text-green-700" },
-    { id: "learning", name: "Learning", color: "text-purple-700" },
-    { id: "health", name: "Health & Fitness", color: "text-red-700" },
-  ];
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const res = await axios.get(`/api/projects`, {
+          withCredentials: true,
+        });
+        // console.log(res.data);
+
+        setProjects(res.data.data); // adjust if your response is shaped differently
+      } catch (error) {
+        console.error("Failed to fetch projects:", error);
+        alert("Unable to fetch projects");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.title.trim()) return;
 
-    // Prepare data for backend
+    if (!validateForm()) {
+      const errorKey = Object.keys(errors)[0];
+      document.getElementById(errorKey)?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+
     const taskData = {
       ...formData,
-      userId, // Include user ID
-      project: formData.project, // Ensure project ID is included
+      userId,
+      project: formData.project,
       createdAt: new Date().toISOString(),
       status: "pending",
       completed: false,
     };
 
     try {
-      // Send POST request to create a new task
       const response = await axios.post("/api/task", taskData);
-      onSubmit(response.data); // Call onSubmit with the response data
+      onSubmit(response.data);
       resetForm();
+      setErrors({}); // clear errors on success
     } catch (error) {
       console.error("Error creating task:", error);
-      // Handle error (e.g., show a notification)
     }
   };
 
@@ -145,6 +184,9 @@ const AddTask = (props) => {
               placeholder="Enter task title..."
               required
             />
+            {errors.title && (
+              <p className="text-red-500 text-sm mt-1">{errors.title}</p>
+            )}
           </div>
 
           {/* Description */}
@@ -161,6 +203,9 @@ const AddTask = (props) => {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               placeholder="Add task description..."
             />
+            {errors.description && (
+              <p className="text-red-500 text-sm mt-1">{errors.description}</p>
+            )}
           </div>
 
           {/* Priority and Important */}
@@ -223,6 +268,9 @@ const AddTask = (props) => {
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+              {errors.dueDate && (
+                <p className="text-red-500 text-sm mt-1">{errors.dueDate}</p>
+              )}
             </div>
 
             <div>
@@ -237,6 +285,9 @@ const AddTask = (props) => {
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+              {errors.dueTime && (
+                <p className="text-red-500 text-sm mt-1">{errors.dueTime}</p>
+              )}
             </div>
           </div>
 
@@ -253,12 +304,21 @@ const AddTask = (props) => {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">Select a project...</option>
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
+              {loading ? (
+                <option disabled>Loading...</option>
+              ) : !Array.isArray(projects) || projects.length === 0 ? (
+                <option disabled>No projects found</option>
+              ) : (
+                projects.map((project) => (
+                  <option key={project._id} value={project._id}>
+                    {project.name}
+                  </option>
+                ))
+              )}
             </select>
+            {errors.project && (
+              <p className="text-red-500 text-sm mt-1">{errors.project}</p>
+            )}
           </div>
 
           {/* Tags */}
